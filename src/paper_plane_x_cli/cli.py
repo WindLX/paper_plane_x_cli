@@ -642,3 +642,7 @@ def paper_note_delete(
     path = f"/papers/{paper_id}/agent-note"
     payload = _request("DELETE", path, ctx=ctx.obj["ctx"])
     _print_json(payload)
+
+
+if __name__ == "__main__":
+    app()
