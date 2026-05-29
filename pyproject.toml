@@ -6,7 +6,6 @@ readme = "README.md"
 authors = [{ name = "windlx", email = "1418043337@qq.com" }]
 requires-python = ">=3.12"
 dependencies = [
-    "click>=8.1.0",
     "httpx>=0.28.1",
     "typer>=0.23.1",
 ]
@@ -19,7 +18,7 @@ dev = [
 ]
 
 [project.scripts]
-ppx = "paper_plane_x_cli.cli:main"
+ppx = "paper_plane_x_cli.cli:app"
 
 [build-system]
 requires = ["hatchling"]

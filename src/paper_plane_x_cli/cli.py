@@ -6,9 +6,8 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any, NoReturn, cast
 
-import click
 import httpx
 import typer
 
@@ -18,11 +17,9 @@ CONTEXT_PATH = CONTEXT_DIR / "paper-plane-x" / "context.json"
 QueryParamValue = str | int | bool
 
 
-class CLIError(Exception):
-    def __init__(self, message: str, *, status_code: int = 2) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
+def _fail(message: str, *, status_code: int = 2) -> NoReturn:
+    typer.echo(json.dumps({"error": message}, ensure_ascii=False), err=True)
+    raise typer.Exit(status_code)
 
 
 def _load_context(path: Path | None = None) -> dict[str, str]:
@@ -32,9 +29,9 @@ def _load_context(path: Path | None = None) -> dict[str, str]:
     try:
         data_obj: object = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise CLIError(f"Invalid context file JSON: {path}: {exc}") from exc
+        _fail(f"Invalid context file JSON: {path}: {exc}")
     if not isinstance(data_obj, dict):
-        raise CLIError(f"Invalid context file shape: {path}")
+        _fail(f"Invalid context file shape: {path}")
     data = cast(dict[str, object], data_obj)
     return {key: str(value) for key, value in data.items() if value is not None}
 
@@ -79,7 +76,7 @@ def _split_csv(raw: str) -> list[str]:
 def _require_project_id(ctx: dict[str, str | None]) -> str:
     project_id = ctx.get("project_id")
     if not project_id:
-        raise CLIError("project_id is required. Run: ppx context set --project-id <id>")
+        _fail("project_id is required. Run: ppx context set --project-id <id>")
     return project_id
 
 
@@ -110,14 +107,14 @@ def _request(
             timeout=60.0,
         )
     except httpx.HTTPError as exc:
-        raise CLIError(f"HTTP request failed: {exc}", status_code=1) from exc
+        _fail(f"HTTP request failed: {exc}", status_code=1)
 
     if response.status_code >= 400:
         try:
             detail = response.json()
         except json.JSONDecodeError:
             detail = response.text
-        raise CLIError(
+        _fail(
             json.dumps(
                 {"status_code": response.status_code, "error": detail},
                 ensure_ascii=False,
@@ -160,7 +157,8 @@ def callback(
 
 
 context_app = typer.Typer(
-    help="Show or save local CLI context such as API base URL and project ID."
+    no_args_is_help=True,
+    help="Show or save local CLI context such as API base URL and project ID.",
 )
 app.add_typer(context_app, name="context")
 
@@ -195,7 +193,10 @@ def context_set(
     _print_json(data)
 
 
-project_app = typer.Typer(help="Project-scoped discovery and overview commands.")
+project_app = typer.Typer(
+    no_args_is_help=True,
+    help="Project-scoped discovery and overview commands.",
+)
 app.add_typer(project_app, name="project")
 
 
@@ -216,7 +217,8 @@ def project_global_finder(ctx: typer.Context) -> None:
 
 
 librarian_app = typer.Typer(
-    help="Search, compare, and deep-dive papers through the Librarian API."
+    no_args_is_help=True,
+    help="Search, compare, and deep-dive papers through the Librarian API.",
 )
 app.add_typer(librarian_app, name="librarian")
 
@@ -308,7 +310,8 @@ def librarian_deep_dive(
 
 
 files_app = typer.Typer(
-    help="Read, write, upload, patch, and delete project sandbox files."
+    no_args_is_help=True,
+    help="Read, write, upload, patch, and delete project sandbox files.",
 )
 app.add_typer(files_app, name="files")
 
@@ -580,7 +583,10 @@ def files_delete(
     _print_json(payload)
 
 
-paper_note_app = typer.Typer(help="Get, write, or delete paper-level agent notes.")
+paper_note_app = typer.Typer(
+    no_args_is_help=True,
+    help="Get, write, or delete paper-level agent notes.",
+)
 app.add_typer(paper_note_app, name="paper-note")
 
 
@@ -613,22 +619,3 @@ def paper_note_delete(
     path = f"/papers/{paper_id}/agent-note"
     payload = _request("DELETE", path, ctx=ctx.obj["ctx"])
     _print_json(payload)
-
-
-def run(argv: list[str] | None = None) -> int:
-    args = sys.argv[1:] if argv is None else argv
-    if not args:
-        args = ["--help"]
-    try:
-        app(args=args, prog_name="ppx", standalone_mode=False)
-    except click.ClickException as exc:
-        _print_json({"error": str(exc)}, stream=sys.stderr)
-        return exc.exit_code
-    except CLIError as exc:
-        _print_json({"error": exc.message}, stream=sys.stderr)
-        return exc.status_code
-    return 0
-
-
-def main() -> None:
-    raise SystemExit(run())

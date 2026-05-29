@@ -3,8 +3,11 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from typer.testing import CliRunner
 
 from paper_plane_x_cli import cli
+
+runner = CliRunner()
 
 
 def test_context_precedence_args_env_file(
@@ -34,41 +37,46 @@ def test_context_precedence_args_env_file(
     }
 
 
-def test_cli_help_exits_successfully(capsys) -> None:
-    status = cli.run(["--help"])
+def test_cli_help_exits_successfully() -> None:
+    result = runner.invoke(cli.app, ["--help"])
 
-    assert status == 0
-    output = capsys.readouterr().out
-    assert "Usage: ppx" in output
+    assert result.exit_code == 0
+    output = result.output
+    assert "Usage:" in output
     assert "Paper Plane X HTTP CLI" in output
     assert "Override API base URL" in output
 
 
-def test_nested_command_help_includes_descriptions(capsys) -> None:
-    status = cli.run(["files", "upload", "--help"])
+def test_nested_command_help_includes_descriptions() -> None:
+    result = runner.invoke(cli.app, ["files", "upload", "--help"])
 
-    output = capsys.readouterr().out
-    assert status == 0
+    output = result.output
+    assert result.exit_code == 0
     assert "Upload a local file into the project sandbox" in output
     assert "Local file to upload" in output
     assert "Sandbox destination path" in output
 
 
-def test_cli_no_args_shows_help_without_traceback(monkeypatch, capsys) -> None:
-    monkeypatch.setattr(cli.sys, "argv", ["ppx"])
+def test_cli_no_args_shows_help_without_traceback() -> None:
+    result = runner.invoke(cli.app)
 
-    status = cli.run()
+    assert result.exit_code == 2
+    assert "Usage:" in result.output
+    assert "Traceback" not in result.output
 
-    captured = capsys.readouterr()
-    assert status == 0
-    assert "Usage: ppx" in captured.out
-    assert "Traceback" not in captured.err
+
+def test_command_group_without_subcommand_shows_help() -> None:
+    result = runner.invoke(cli.app, ["context"])
+
+    assert result.exit_code == 2
+    assert "Usage:" in result.output
+    assert "context" in result.output
+    assert "Traceback" not in result.output
 
 
 def test_librarian_search_builds_http_request(
     tmp_path: Path,
     monkeypatch,
-    capsys,
 ) -> None:
     context_path = tmp_path / "context.json"
     context_path.write_text(
@@ -94,7 +102,8 @@ def test_librarian_search_builds_http_request(
 
     monkeypatch.setattr(cli.httpx, "request", fake_request)
 
-    status = cli.run(
+    result = runner.invoke(
+        cli.app,
         [
             "librarian",
             "search",
@@ -102,21 +111,20 @@ def test_librarian_search_builds_http_request(
             "(meta.title CONTAINS test)",
             "--limit",
             "5",
-        ]
+        ],
     )
 
-    assert status == 0
+    assert result.exit_code == 0
     assert captured["method"] == "POST"
     assert captured["url"] == "http://server/api/v1/librarian/search"
     assert captured["json"]["project_id"] == "proj-1"
     assert captured["json"]["limit"] == 5
-    assert json.loads(capsys.readouterr().out)["paper_ids"] == ["p1"]
+    assert json.loads(result.output)["paper_ids"] == ["p1"]
 
 
 def test_files_upload_builds_multipart_request(
     tmp_path: Path,
     monkeypatch,
-    capsys,
 ) -> None:
     context_path = tmp_path / "context.json"
     context_path.write_text(
@@ -157,7 +165,8 @@ def test_files_upload_builds_multipart_request(
 
     monkeypatch.setattr(cli.httpx, "request", fake_request)
 
-    status = cli.run(
+    result = runner.invoke(
+        cli.app,
         [
             "files",
             "upload",
@@ -165,21 +174,20 @@ def test_files_upload_builds_multipart_request(
             str(source_path),
             "--path",
             "/notes/local.md",
-        ]
+        ],
     )
 
-    assert status == 0
+    assert result.exit_code == 0
     assert captured["method"] == "POST"
     assert captured["url"] == "http://server/api/v1/projects/proj-1/files/upload"
     assert captured["data"]["file_path"] == "/notes/local.md"
     assert captured["uploaded_name"] == "local.md"
     assert captured["uploaded_content"] == b"# Local\n"
-    assert json.loads(capsys.readouterr().out)["file_path"] == "/notes/local.md"
+    assert json.loads(result.output)["file_path"] == "/notes/local.md"
 
 
 def test_cli_reports_http_error(
     monkeypatch,
-    capsys,
 ) -> None:
     def fake_request(method: str, url: str, **kwargs: Any) -> httpx.Response:
         request = httpx.Request(method, url)
@@ -191,7 +199,8 @@ def test_cli_reports_http_error(
 
     monkeypatch.setattr(cli.httpx, "request", fake_request)
 
-    status = cli.run(
+    result = runner.invoke(
+        cli.app,
         [
             "--project-id",
             "proj-1",
@@ -199,9 +208,8 @@ def test_cli_reports_http_error(
             "search",
             "--query-expr",
             "(bad CONTAINS x)",
-        ]
+        ],
     )
 
-    assert status == 1
-    payload = json.loads(capsys.readouterr().err)
-    assert "invalid_field" in payload["error"]
+    assert result.exit_code == 1
+    assert "invalid_field" in result.output
