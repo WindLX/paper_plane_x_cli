@@ -12,8 +12,9 @@ import httpx
 import typer
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/api/v1"
-CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-CONTEXT_PATH = CONTEXT_DIR / "paper-plane-x" / "context.json"
+GLOBAL_CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+GLOBAL_CONTEXT_PATH = GLOBAL_CONTEXT_DIR / "paper-plane-x" / "context.json"
+LOCAL_CONTEXT_PATH = Path.cwd() / ".paper-plane-x" / "context.json"
 QueryParamValue = str | int | bool
 
 
@@ -22,8 +23,7 @@ def _fail(message: str, *, status_code: int = 2) -> NoReturn:
     raise typer.Exit(status_code)
 
 
-def _load_context(path: Path | None = None) -> dict[str, str]:
-    path = path or CONTEXT_PATH
+def _load_context(path: Path) -> dict[str, str]:
     if not path.exists():
         return {}
     try:
@@ -36,8 +36,7 @@ def _load_context(path: Path | None = None) -> dict[str, str]:
     return {key: str(value) for key, value in data.items() if value is not None}
 
 
-def _save_context(data: dict[str, str], path: Path | None = None) -> None:
-    path = path or CONTEXT_PATH
+def _save_context(data: dict[str, str], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -48,15 +47,17 @@ def resolve_context(
     base_url: str | None = None,
     project_id: str | None = None,
 ) -> dict[str, str | None]:
-    stored = _load_context()
+    global_ctx = _load_context(GLOBAL_CONTEXT_PATH)
+    local_ctx = _load_context(LOCAL_CONTEXT_PATH)
+    merged = {**global_ctx, **local_ctx}
     resolved_base_url = (
         base_url
         or os.environ.get("PPX_BASE_URL")
-        or stored.get("base_url")
+        or merged.get("base_url")
         or DEFAULT_BASE_URL
     )
     resolved_project_id = (
-        project_id or os.environ.get("PPX_PROJECT_ID") or stored.get("project_id")
+        project_id or os.environ.get("PPX_PROJECT_ID") or merged.get("project_id")
     )
     return {
         "base_url": resolved_base_url.rstrip("/"),
@@ -165,10 +166,24 @@ app.add_typer(context_app, name="context")
 
 @context_app.command("show", help="Print resolved CLI context as JSON.")
 def context_show(ctx: typer.Context) -> None:
-    _print_json(ctx.obj["ctx"])
+    global_ctx = _load_context(GLOBAL_CONTEXT_PATH)
+    local_ctx = _load_context(LOCAL_CONTEXT_PATH)
+    merged = {**global_ctx, **local_ctx}
+    resolved = ctx.obj["ctx"]
+    _print_json(
+        {
+            "resolved": resolved,
+            "global": global_ctx or None,
+            "local": local_ctx or None,
+            "merged": merged or None,
+        }
+    )
 
 
-@context_app.command("set", help=f"Save context to {CONTEXT_PATH}.")
+@context_app.command(
+    "set",
+    help=f"Save context to {GLOBAL_CONTEXT_PATH} (default) or {LOCAL_CONTEXT_PATH} (--local).",
+)
 def context_set(
     set_base_url: Annotated[
         str | None,
@@ -183,13 +198,21 @@ def context_set(
             "--project-id", help="Project ID to save for project-scoped commands."
         ),
     ] = None,
+    local: Annotated[
+        bool,
+        typer.Option(
+            "--local",
+            help="Write to the local context file in the current directory instead of the global one.",
+        ),
+    ] = False,
 ) -> None:
-    data = _load_context()
+    path = LOCAL_CONTEXT_PATH if local else GLOBAL_CONTEXT_PATH
+    data = _load_context(path)
     if set_base_url is not None:
         data["base_url"] = set_base_url.rstrip("/")
     if set_project_id is not None:
         data["project_id"] = set_project_id
-    _save_context(data)
+    _save_context(data, path)
     _print_json(data)
 
 

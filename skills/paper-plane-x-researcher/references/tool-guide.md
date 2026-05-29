@@ -6,6 +6,7 @@
 
 ```bash
 ppx context set --base-url http://127.0.0.1:8000/api/v1 --project-id prj_x
+ppx context set --local --project-id prj_y
 ppx context show
 ```
 
@@ -13,8 +14,11 @@ Context precedence is:
 
 1. Command flags: `--base-url`, `--project-id`
 2. Environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`
-3. Saved context: `~/.config/paper-plane-x/context.json`
-4. Default base URL: `http://127.0.0.1:8000/api/v1`
+3. Local context: `./.paper-plane-x/context.json` (in the current working directory)
+4. Global context: `~/.config/paper-plane-x/context.json`
+5. Default base URL: `http://127.0.0.1:8000/api/v1`
+
+The local context overrides the global context, allowing per-project settings without changing global defaults. Use `--local` with `ppx context set` to write to the local context file.
 
 Run `ppx context show` before project-scoped work. Most project file and project librarian commands require `project_id`.
 
@@ -22,40 +26,40 @@ Run `ppx context show` before project-scoped work. Most project file and project
 
 ### Project Files
 
-| Researcher tool | CLI command |
-| --- | --- |
-| `list_project_files` | `ppx files list --dir /` |
-| `read_project_file` | `ppx files read --path /notes/idea.md` |
-| `read_project_file_lines` | `ppx files lines --path /draft.md --start-line 10 --end-line 20` |
-| `find_in_project_file` | `ppx files find --path /draft.md --query "Related Work"` |
-| `write_project_file` | `ppx files write --path /notes/summary.md --content "..."` |
-| local file upload | `ppx files upload --source ./summary.md --path /notes/summary.md` |
-| `replace_project_file_lines` | `ppx files replace-lines --path /draft.md --start-line 4 --end-line 6 --new-text "..."` |
-| `replace_project_file_text` | `ppx files replace-text --path /draft.md --old-text "..." --new-text "..."` |
-| `patch_project_file` | `ppx files patch --path /draft.md --action insert_after --anchor-text "## Methods\n" --content "..."` |
-| `remove_project_file` | `ppx files delete --path /tmp/old.md` |
+| Researcher tool              | CLI command                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `list_project_files`         | `ppx files list --dir /`                                                                              |
+| `read_project_file`          | `ppx files read --path /notes/idea.md`                                                                |
+| `read_project_file_lines`    | `ppx files lines --path /draft.md --start-line 10 --end-line 20`                                      |
+| `find_in_project_file`       | `ppx files find --path /draft.md --query "Related Work"`                                              |
+| `write_project_file`         | `ppx files write --path /notes/summary.md --content "..."`                                            |
+| local file upload            | `ppx files upload --source ./summary.md --path /notes/summary.md`                                     |
+| `replace_project_file_lines` | `ppx files replace-lines --path /draft.md --start-line 4 --end-line 6 --new-text "..."`               |
+| `replace_project_file_text`  | `ppx files replace-text --path /draft.md --old-text "..." --new-text "..."`                           |
+| `patch_project_file`         | `ppx files patch --path /draft.md --action insert_after --anchor-text "## Methods\n" --content "..."` |
+| `remove_project_file`        | `ppx files delete --path /tmp/old.md`                                                                 |
 
 Patch actions are `replace`, `insert_before`, `insert_after`, and `delete`. `replace-text` and `patch` support `--expected-occurrences`; use it to avoid accidental multi-match edits. `replace-text` also supports `--replace-all`.
 
 ### Paper Notes
 
-| Researcher tool | CLI command |
-| --- | --- |
-| `get_paper_agent_note` | `ppx paper-note get --paper-id p1` |
-| `write_paper_agent_note` | `ppx paper-note write --paper-id p1 --content "..."` |
+| Researcher tool           | CLI command                                          |
+| ------------------------- | ---------------------------------------------------- |
+| `get_paper_agent_note`    | `ppx paper-note get --paper-id p1`                   |
+| `write_paper_agent_note`  | `ppx paper-note write --paper-id p1 --content "..."` |
 | `update_paper_agent_note` | `ppx paper-note write --paper-id p1 --content "..."` |
-| `delete_paper_agent_note` | `ppx paper-note delete --paper-id p1` |
+| `delete_paper_agent_note` | `ppx paper-note delete --paper-id p1`                |
 
 Paper notes are for stable, reusable conclusions about one paper.
 
 ### Librarian
 
-| Researcher tool | CLI command |
-| --- | --- |
-| `global_finder` | `ppx project global-finder` |
-| `search_paper` | `ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20` |
+| Researcher tool  | CLI command                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `global_finder`  | `ppx project global-finder`                                                                             |
+| `search_paper`   | `ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20`                      |
 | `matrix_compare` | `ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan,synthesis_data.methodology.innovation` |
-| `deep_dive` | `ppx librarian deep-dive --paper-id p1 --question "What is the main control objective?"` |
+| `deep_dive`      | `ppx librarian deep-dive --paper-id p1 --question "What is the main control objective?"`                |
 
 Use `search_paper` to find candidate `paper_id`s, `matrix_compare` to compare structured fields, and `deep_dive` for focused single-paper questions that cannot be answered from structured fields.
 

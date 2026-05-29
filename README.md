@@ -40,11 +40,20 @@ After `uv tool install`, use `ppx` directly.
 
 1. command line options: `--base-url`, `--project-id`
 2. environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`
-3. local context file: `~/.config/paper-plane-x/context.json`
-4. default base URL: `http://127.0.0.1:8000/api/v1`
+3. local context file: `./.paper-plane-x/context.json` (in the current working directory)
+4. global context file: `~/.config/paper-plane-x/context.json`
+5. default base URL: `http://127.0.0.1:8000/api/v1`
+
+The local context overrides the global context. This allows per-project settings without changing your global defaults.
 
 ```bash
-ppx context set --base-url http://127.0.0.1:8000/api/v1 --project-id prj_x
+# Global context (default)
+ppx context set --base-url http://127.0.0.1:8000/api/v1
+ppx context set --project-id prj_x
+
+# Local context (current directory only)
+ppx context set --local --project-id prj_y
+
 ppx context show
 ```
 
