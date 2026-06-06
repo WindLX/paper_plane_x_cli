@@ -10,21 +10,38 @@ from paper_plane_x_cli import cli
 runner = CliRunner()
 
 
+def set_context_paths(monkeypatch, tmp_path: Path) -> tuple[Path, Path]:
+    global_context_path = tmp_path / "global" / "context.json"
+    local_context_path = tmp_path / "local" / "context.json"
+    monkeypatch.setattr(cli, "GLOBAL_CONTEXT_PATH", global_context_path)
+    monkeypatch.setattr(cli, "LOCAL_CONTEXT_PATH", local_context_path)
+    return global_context_path, local_context_path
+
+
 def test_context_precedence_args_env_file(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    context_path = tmp_path / "context.json"
-    context_path.write_text(
+    global_context_path, local_context_path = set_context_paths(monkeypatch, tmp_path)
+    global_context_path.parent.mkdir(parents=True)
+    global_context_path.write_text(
         json.dumps(
             {
-                "base_url": "http://file/api/v1",
-                "project_id": "file-project",
+                "base_url": "http://global/api/v1",
+                "project_id": "global-project",
             }
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "CONTEXT_PATH", context_path)
+    local_context_path.parent.mkdir(parents=True)
+    local_context_path.write_text(
+        json.dumps(
+            {
+                "project_id": "local-project",
+            }
+        ),
+        encoding="utf-8",
+    )
     monkeypatch.setenv("PPX_BASE_URL", "http://env/api/v1")
     monkeypatch.setenv("PPX_PROJECT_ID", "env-project")
 
@@ -78,8 +95,9 @@ def test_librarian_search_builds_http_request(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    context_path = tmp_path / "context.json"
-    context_path.write_text(
+    global_context_path, _ = set_context_paths(monkeypatch, tmp_path)
+    global_context_path.parent.mkdir(parents=True)
+    global_context_path.write_text(
         json.dumps(
             {
                 "base_url": "http://server/api/v1",
@@ -88,7 +106,6 @@ def test_librarian_search_builds_http_request(
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(cli, "CONTEXT_PATH", context_path)
     captured: dict[str, Any] = {}
 
     def fake_request(method: str, url: str, **kwargs: Any) -> httpx.Response:
@@ -126,8 +143,9 @@ def test_files_upload_builds_multipart_request(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    context_path = tmp_path / "context.json"
-    context_path.write_text(
+    global_context_path, _ = set_context_paths(monkeypatch, tmp_path)
+    global_context_path.parent.mkdir(parents=True)
+    global_context_path.write_text(
         json.dumps(
             {
                 "base_url": "http://server/api/v1",
@@ -138,7 +156,6 @@ def test_files_upload_builds_multipart_request(
     )
     source_path = tmp_path / "local.md"
     source_path.write_text("# Local\n", encoding="utf-8")
-    monkeypatch.setattr(cli, "CONTEXT_PATH", context_path)
     captured: dict[str, Any] = {}
 
     def fake_request(method: str, url: str, **kwargs: Any) -> httpx.Response:
