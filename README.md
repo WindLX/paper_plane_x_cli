@@ -6,8 +6,9 @@ This package contains:
 
 - `ppx`: a JSON-first CLI that talks to a running Paper Plane X FastAPI server.
 - `skills/paper-plane-x-researcher`: the Researcher skill for Codex, Claude Code, and other agent tools.
+- `skills/mineru-pdf-to-markdown`: a PDF-to-Markdown workflow skill backed by MinerU.
 
-The CLI does not import backend tools or access the database directly. It only calls HTTP endpoints under `/api/v1`.
+Most CLI commands do not import backend tools or access the database directly. Project and librarian commands only call HTTP endpoints under `/api/v1`. The MinerU command is a standalone local utility that calls a MinerU HTTP service directly.
 
 ## Install
 
@@ -80,12 +81,42 @@ All tool commands print JSON to stdout. HTTP and validation failures print struc
 
 `files upload` uses the same sandbox rules as project files: allowed text/data extensions only, no path traversal, and a 10MB per-file limit.
 
+## MinerU PDF Conversion
+
+Use MinerU when an external agent needs to read or process a local PDF as Markdown:
+
+```bash
+ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru
+```
+
+By default this calls `http://127.0.0.1:8888/file_parse`. Override with `--mineru-url` or `MINERU_BASE_URL`.
+
+The command writes Markdown plus referenced images and prints JSON:
+
+```json
+{
+  "md_path": "paper-mineru/paper.md",
+  "image_paths": ["paper-mineru/images/fig1.png"]
+}
+```
+
+Useful options:
+
+```bash
+ppx mineru parse --source ./scan.pdf --save-dir ./scan-mineru --parse-method ocr
+ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru --lang-list ch,en
+ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru --start-page-id 0 --end-page-id 10
+```
+
 ## Skill
 
-The Researcher skill lives at:
+Bundled skills live under `skills/`:
 
 ```text
 skills/paper-plane-x-researcher/SKILL.md
+skills/mineru-pdf-to-markdown/SKILL.md
 ```
 
 Use it when an external agent should follow the same research workflow as Paper Plane X: verify project context, search and compare papers through `ppx`, write durable results into project files or paper notes, and cite only evidence actually fetched through the CLI/API.
+
+Use the MinerU skill when an external agent encounters local PDFs and should convert them to Markdown before reading, summarizing, extracting, or uploading the result.

@@ -11,7 +11,10 @@ from typing import Annotated, Any, NoReturn, cast
 import httpx
 import typer
 
+from paper_plane_x_cli.mineru import MinerUBackend, MinerUClient, MinerUParseMethod
+
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/api/v1"
+DEFAULT_MINERU_URL = "http://127.0.0.1:8888"
 GLOBAL_CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 GLOBAL_CONTEXT_PATH = GLOBAL_CONTEXT_DIR / "paper-plane-x" / "context.json"
 LOCAL_CONTEXT_PATH = Path.cwd() / ".paper-plane-x" / "context.json"
@@ -72,6 +75,12 @@ def _print_json(payload: object, *, stream: Any | None = None) -> None:
 
 def _split_csv(raw: str) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+def _output_md_name(source: Path, output_md_name: str | None) -> str:
+    if output_md_name:
+        return output_md_name
+    return f"{source.stem}.md"
 
 
 def _require_project_id(ctx: dict[str, str | None]) -> str:
@@ -221,6 +230,135 @@ project_app = typer.Typer(
     help="Project-scoped discovery and overview commands.",
 )
 app.add_typer(project_app, name="project")
+
+mineru_app = typer.Typer(
+    no_args_is_help=True,
+    help="Convert local PDFs to Markdown through a MinerU HTTP server.",
+)
+app.add_typer(mineru_app, name="mineru")
+
+
+@mineru_app.command("parse", help="Convert a local PDF into Markdown and image files.")
+def mineru_parse(
+    source: Annotated[
+        Path,
+        typer.Option(
+            "--source",
+            exists=True,
+            dir_okay=False,
+            help="Local PDF file to parse.",
+        ),
+    ],
+    save_dir: Annotated[
+        Path,
+        typer.Option(
+            "--save-dir",
+            help="Directory where Markdown and referenced images are written.",
+        ),
+    ],
+    mineru_url: Annotated[
+        str,
+        typer.Option(
+            "--mineru-url",
+            envvar="MINERU_BASE_URL",
+            help="MinerU HTTP base URL. Can also be set with MINERU_BASE_URL.",
+        ),
+    ] = DEFAULT_MINERU_URL,
+    output_md_name: Annotated[
+        str | None,
+        typer.Option(
+            "--output-md-name",
+            help="Markdown filename. Defaults to the PDF stem plus .md.",
+        ),
+    ] = None,
+    output_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-dir",
+            help="MinerU server output_dir parameter. Defaults to --save-dir.",
+        ),
+    ] = None,
+    lang_list: Annotated[
+        str,
+        typer.Option(
+            "--lang-list",
+            help="Comma-separated MinerU language list, e.g. ch,en.",
+        ),
+    ] = "ch",
+    backend: Annotated[
+        MinerUBackend,
+        typer.Option("--backend", help="MinerU parsing backend."),
+    ] = MinerUBackend.HYBRID_AUTO,
+    parse_method: Annotated[
+        MinerUParseMethod,
+        typer.Option("--parse-method", help="MinerU parse method."),
+    ] = MinerUParseMethod.AUTO,
+    formula_enable: Annotated[
+        bool,
+        typer.Option(
+            "--formula/--no-formula",
+            help="Enable formula recognition.",
+        ),
+    ] = True,
+    table_enable: Annotated[
+        bool,
+        typer.Option("--table/--no-table", help="Enable table recognition."),
+    ] = True,
+    server_url: Annotated[
+        str | None,
+        typer.Option("--server-url", help="Optional MinerU model server URL."),
+    ] = None,
+    start_page_id: Annotated[
+        int,
+        typer.Option("--start-page-id", help="First page index to parse, 0-based."),
+    ] = 0,
+    end_page_id: Annotated[
+        int,
+        typer.Option("--end-page-id", help="Last page index to parse."),
+    ] = 99999,
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="HTTP timeout in seconds."),
+    ] = 300.0,
+    include_content: Annotated[
+        bool,
+        typer.Option(
+            "--include-content",
+            help="Include Markdown content in JSON output. Otherwise only paths are printed.",
+        ),
+    ] = False,
+) -> None:
+    if source.suffix.lower() != ".pdf":
+        _fail(f"MinerU parse expects a PDF file: {source}")
+
+    md_name = _output_md_name(source, output_md_name)
+    effective_output_dir = output_dir or save_dir
+    try:
+        result = MinerUClient(mineru_url).parse_pdf(
+            file_path=source,
+            output_md_name=md_name,
+            save_dir=save_dir,
+            output_dir=effective_output_dir,
+            lang_list=_split_csv(lang_list),
+            backend=backend,
+            parse_method=parse_method,
+            formula_enable=formula_enable,
+            table_enable=table_enable,
+            server_url=server_url,
+            start_page_id=start_page_id,
+            end_page_id=end_page_id,
+            timeout=timeout,
+        )
+    except (FileNotFoundError, ValueError, RuntimeError, httpx.HTTPError) as exc:
+        _fail(str(exc), status_code=1)
+
+    payload: dict[str, object] = {
+        "md_path": str(result.md_path),
+        "image_paths": [str(path) for path in result.image_paths],
+    }
+    if include_content:
+        payload["md_content"] = result.md_content
+    _print_json(payload)
 
 
 @project_app.command(
