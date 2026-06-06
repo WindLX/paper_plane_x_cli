@@ -43,13 +43,11 @@ class MinerUClient:
         file_path: str | Path,
         output_md_name: str,
         save_dir: str | Path,
-        output_dir: str | Path,
         lang_list: list[str],
         backend: MinerUBackend = MinerUBackend.HYBRID_AUTO,
         parse_method: MinerUParseMethod = MinerUParseMethod.AUTO,
         formula_enable: bool = True,
         table_enable: bool = True,
-        server_url: str | None = None,
         return_md: bool = True,
         return_middle_json: bool = False,
         return_model_output: bool = False,
@@ -67,7 +65,6 @@ class MinerUClient:
             raise ValueError(f"PDF path is not a file: {file_path}")
 
         payload: dict[str, Any] = {
-            "output_dir": str(output_dir),
             "backend": backend.value,
             "parse_method": parse_method.value,
             "formula_enable": _bool_text(formula_enable),
@@ -82,8 +79,6 @@ class MinerUClient:
             "end_page_id": str(end_page_id),
             "lang_list": lang_list,
         }
-        if server_url:
-            payload["server_url"] = server_url
 
         with file_path.open("rb") as file_obj:
             files = {"files": (file_path.name, file_obj, "application/pdf")}

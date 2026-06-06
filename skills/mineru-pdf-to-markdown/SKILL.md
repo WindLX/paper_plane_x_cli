@@ -26,19 +26,17 @@ ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru
 ppx mineru parse \
   --source ./paper.pdf \
   --save-dir ./paper-mineru \
-  --mineru-url http://127.0.0.1:8888 \
-  --lang-list ch,en
 ```
 
 Important options:
 
-- `--mineru-url`: MinerU HTTP service base URL. Can also be set with `MINERU_BASE_URL`.
+- `--source`: local PDF file path.
 - `--save-dir`: local directory where Markdown and `images/` are written.
-- `--output-md-name`: override the Markdown filename.
-- `--backend`: MinerU backend, default `hybrid-auto-engine`.
-- `--parse-method`: `auto`, `txt`, or `ocr`; use `ocr` for scanned PDFs when `auto` output is poor.
+- `--mineru-url`: MinerU HTTP service base URL. If omitted, it is resolved from context (set with `ppx context set --mineru-url`), then the `MINERU_BASE_URL` environment variable, then the default `http://127.0.0.1:8888`.
+- `--output-md-name`: Markdown filename. Defaults to the PDF stem plus `.md`.
+- `--lang-list`: comma-separated language codes to assist parsing, e.g. `en` or `ch,en`.
 - `--start-page-id` / `--end-page-id`: parse a page range for large PDFs.
-- `--include-content`: include Markdown content in JSON output; avoid for long papers unless the caller explicitly needs stdout content.
+- `timeout`: HTTP timeout in seconds.
 
 The command prints JSON:
 
@@ -52,6 +50,5 @@ The command prints JSON:
 ## Reading Rules
 
 - Base claims on the generated Markdown, not on guessed PDF contents.
-- If conversion fails, report the MinerU error and ask whether to retry with a different `--mineru-url`, `--parse-method ocr`, or page range.
-- If Markdown appears incomplete, retry with `--parse-method ocr` for scanned documents or parse smaller page ranges.
+- If conversion fails, report the MinerU error and ask whether to retry with a different `--mineru-url`.
 - Preserve image references when moving Markdown; copy or upload the associated `images/` files if the target workflow needs figures.

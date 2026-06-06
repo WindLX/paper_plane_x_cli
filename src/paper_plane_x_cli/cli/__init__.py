@@ -1,0 +1,64 @@
+"""Paper Plane X HTTP CLI for external agent tools."""
+
+from __future__ import annotations
+
+from typing import Annotated
+
+import typer
+
+from paper_plane_x_cli.cli.context import context_app
+from paper_plane_x_cli.cli.files import files_app
+from paper_plane_x_cli.cli.librarian import librarian_app
+from paper_plane_x_cli.cli.mineru import mineru_app
+from paper_plane_x_cli.cli.paper_note import paper_note_app
+from paper_plane_x_cli.cli.project import project_app
+from paper_plane_x_cli.cli.utils import resolve_context
+
+app = typer.Typer(
+    no_args_is_help=True,
+    add_completion=False,
+    help=(
+        "Paper Plane X HTTP CLI. All commands call a running Paper Plane X "
+        "FastAPI server and print JSON for external agents."
+    ),
+)
+
+
+@app.callback()
+def callback(
+    ctx: typer.Context,
+    base_url: Annotated[
+        str | None,
+        typer.Option(
+            "--base-url",
+            help="Override API base URL, e.g. http://127.0.0.1:8000/api/v1.",
+        ),
+    ] = None,
+    project_id: Annotated[
+        str | None,
+        typer.Option("--project-id", help="Override current Paper Plane X project ID."),
+    ] = None,
+    mineru_url: Annotated[
+        str | None,
+        typer.Option(
+            "--mineru-url",
+            help="Override MinerU HTTP base URL. Defaults to PPX_MINERU_URL env var or http://127.0.0.1:8888.",
+        ),
+    ] = None,
+) -> None:
+    ctx.ensure_object(dict)
+    ctx.obj["ctx"] = resolve_context(
+        base_url=base_url, project_id=project_id, mineru_url=mineru_url
+    )
+
+
+app.add_typer(context_app, name="context")
+app.add_typer(project_app, name="project")
+app.add_typer(mineru_app, name="mineru")
+app.add_typer(librarian_app, name="librarian")
+app.add_typer(files_app, name="files")
+app.add_typer(paper_note_app, name="paper-note")
+
+
+if __name__ == "__main__":
+    app()

@@ -39,11 +39,11 @@ After `uv tool install`, use `ppx` directly.
 
 `ppx` resolves context in this order:
 
-1. command line options: `--base-url`, `--project-id`
-2. environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`
+1. command line options: `--base-url`, `--project-id`, `--mineru-url`
+2. environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`, `PPX_MINERU_URL`
 3. local context file: `./.paper-plane-x/context.json` (in the current working directory)
 4. global context file: `~/.config/paper-plane-x/context.json`
-5. default base URL: `http://127.0.0.1:8000/api/v1`
+5. default base URL: `http://127.0.0.1:8000/api/v1`, default MinerU URL: `http://127.0.0.1:8888`
 
 The local context overrides the global context. This allows per-project settings without changing your global defaults.
 
@@ -51,6 +51,7 @@ The local context overrides the global context. This allows per-project settings
 # Global context (default)
 ppx context set --base-url http://127.0.0.1:8000/api/v1
 ppx context set --project-id prj_x
+ppx context set --mineru-url http://127.0.0.1:8888
 
 # Local context (current directory only)
 ppx context set --local --project-id prj_y
@@ -89,7 +90,7 @@ Use MinerU when an external agent needs to read or process a local PDF as Markdo
 ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru
 ```
 
-By default this calls `http://127.0.0.1:8888/file_parse`. Override with `--mineru-url` or `MINERU_BASE_URL`.
+The MinerU URL is resolved in the same order as other context values: `--mineru-url` option, `MINERU_BASE_URL` environment variable, local/global context file (`ppx context set --mineru-url`), then the default `http://127.0.0.1:8888`.
 
 The command writes Markdown plus referenced images and prints JSON:
 
