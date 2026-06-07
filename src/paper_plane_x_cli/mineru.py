@@ -44,6 +44,7 @@ class MinerUClient:
         output_md_name: str,
         save_dir: str | Path,
         lang_list: list[str],
+        output_dir: str | Path | None = None,
         backend: MinerUBackend = MinerUBackend.HYBRID_AUTO,
         parse_method: MinerUParseMethod = MinerUParseMethod.AUTO,
         formula_enable: bool = True,
@@ -92,7 +93,7 @@ class MinerUClient:
         if response.status_code != 200:
             raise RuntimeError(f"HTTP Error {response.status_code}: {response.text}")
 
-        return self._parse_response(response, output_md_name, save_dir)
+        return self._parse_response(response, output_md_name, output_dir or save_dir)
 
     def load_md(self, md_name: str, save_dir: str | Path) -> MinerUOutput:
         save_dir = Path(save_dir)

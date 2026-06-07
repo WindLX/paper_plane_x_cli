@@ -15,7 +15,7 @@ from paper_plane_x_cli.cli.utils import (
     print_json,
     split_csv,
 )
-from paper_plane_x_cli.mineru import MinerUBackend, MinerUClient, MinerUParseMethod
+from paper_plane_x_cli.mineru import MinerUBackend, MinerUParseMethod
 
 mineru_app = typer.Typer(
     no_args_is_help=True,
@@ -106,10 +106,13 @@ def mineru_parse(
 
     md_name = get_output_md_name(source, output_md_name)
     try:
-        result = MinerUClient(resolved_mineru_url).parse_pdf(
+        from paper_plane_x_cli import cli as root_cli
+
+        result = root_cli.MinerUClient(resolved_mineru_url).parse_pdf(
             file_path=source,
             output_md_name=md_name,
             save_dir=save_dir,
+            output_dir=save_dir,
             lang_list=split_csv(lang_list),
             backend=backend,
             parse_method=parse_method,

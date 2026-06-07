@@ -1,5 +1,5 @@
 ---
-name: paper-plane-x-researcher
+name: ppx-researcher
 description: Use Paper Plane X as a project-scoped academic research assistant through the ppx HTTP CLI. Trigger when the user wants to inspect project papers, search or compare literature, deep-dive a paper, write or continue project notes/drafts, or maintain paper-level AI notes.
 ---
 

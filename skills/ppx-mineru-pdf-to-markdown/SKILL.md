@@ -1,5 +1,5 @@
 ---
-name: mineru-pdf-to-markdown
+name: ppx-mineru-pdf-to-markdown
 description: Use when an agent needs to read, summarize, extract, cite, or process local PDF files by first converting them to Markdown with the Paper Plane X CLI MinerU tool. Trigger for PDF-heavy research, scanned PDFs, papers with formulas/tables, or requests to transform PDFs into Markdown assets.
 ---
 

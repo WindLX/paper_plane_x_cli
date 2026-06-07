@@ -51,6 +51,7 @@ def test_context_precedence_args_env_file(
     ) == {
         "base_url": "http://arg/api/v1",
         "project_id": "arg-project",
+        "mineru_url": "http://127.0.0.1:8888",
     }
 
 
@@ -80,6 +81,40 @@ def test_cli_no_args_shows_help_without_traceback() -> None:
     assert result.exit_code == 2
     assert "Usage:" in result.output
     assert "Traceback" not in result.output
+
+
+def test_skills_install_and_uninstall(tmp_path: Path) -> None:
+    target_dir = tmp_path / "skills"
+
+    install_result = runner.invoke(
+        cli.app,
+        ["skills", "install", "--target-dir", str(target_dir)],
+    )
+
+    assert install_result.exit_code == 0
+    install_payload = json.loads(install_result.output)
+    assert "ppx-researcher" in install_payload["installed"]
+    assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
+    assert (target_dir / "ppx-evidence-locking" / "SKILL.md").exists()
+
+    second_install = runner.invoke(
+        cli.app,
+        ["skills", "install", "--target-dir", str(target_dir)],
+    )
+
+    assert second_install.exit_code == 0
+    second_payload = json.loads(second_install.output)
+    assert "ppx-researcher" in second_payload["skipped"]
+
+    uninstall_result = runner.invoke(
+        cli.app,
+        ["skills", "uninstall", "--target-dir", str(target_dir)],
+    )
+
+    assert uninstall_result.exit_code == 0
+    uninstall_payload = json.loads(uninstall_result.output)
+    assert "ppx-researcher" in uninstall_payload["removed"]
+    assert not (target_dir / "ppx-researcher").exists()
 
 
 def test_command_group_without_subcommand_shows_help() -> None:

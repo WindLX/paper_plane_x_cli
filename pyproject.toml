@@ -1,7 +1,7 @@
 [project]
 name = "paper-plane-x-cli"
 version = "0.1.0"
-description = "HTTP CLI and external-agent skill for Paper Plane X"
+description = "HTTP CLI and external-agent skills for Paper Plane X"
 readme = "README.md"
 authors = [{ name = "windlx", email = "1418043337@qq.com" }]
 requires-python = ">=3.12"
