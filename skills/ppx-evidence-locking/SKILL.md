@@ -20,6 +20,12 @@ Use this skill before drafting high-stakes claims, after completing experiments,
 - Source paths, paper IDs, command outputs, logs, or data files supporting each claim.
 - User decisions made during the research process.
 
+## Paper Plane X Toolchain
+
+- Pair with `ppx-researcher` when locked facts come from Paper Plane X project files, librarian results, paper IDs, deep-dive outputs, or paper notes.
+- Pair with `ppx-mineru-pdf-to-markdown` when locked evidence comes from locally converted PDFs; record both the original PDF path and generated Markdown path.
+- Keep locks local first. Use `ppx-researcher` to upload or write lock documents into Paper Plane X only after user confirmation.
+
 ## Workflow
 
 1. Inspect current state:

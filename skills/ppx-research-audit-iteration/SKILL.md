@@ -20,6 +20,12 @@ Use this skill for review requests, post-draft checks, result audits, configurat
 - Review goal: correctness, traceability, writing quality, novelty, reproducibility, or consistency.
 - Available tools: git, rg, file readers, subagents, validators.
 
+## Paper Plane X Toolchain
+
+- Pair with `ppx-researcher` when auditing Paper Plane X project files, librarian-derived claims, paper notes, or sync/upload decisions.
+- Pair with `ppx-mineru-pdf-to-markdown` when auditing whether PDF-derived claims are supported by generated Markdown rather than guessed PDF content.
+- In reviewer subagents, explicitly include `ppx-researcher` or `ppx-mineru-pdf-to-markdown` when those tools are needed for evidence checks.
+
 ## Workflow
 
 1. Establish scope:

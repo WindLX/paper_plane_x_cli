@@ -20,6 +20,12 @@ Use this skill for literature searches, annotated bibliographies, paper matrices
 - Available literature tools: ppx, Zotero, Semantic Scholar, Google Scholar, local Markdown/PDF parsers.
 - Required output: shortlist, matrix, deep-dive report, synthesis, or draft prose.
 
+## Paper Plane X Toolchain
+
+- Pair with `ppx-researcher` for Paper Plane X library work: `ppx context show`, project paper search, matrix comparison, deep-dive, project file IO, and paper-note maintenance.
+- Pair with `ppx-mineru-pdf-to-markdown` before close reading local PDFs, especially scanned PDFs or papers with formulas, tables, or figures that need Markdown evidence.
+- If both are needed, first use `ppx-mineru-pdf-to-markdown` to convert local PDFs, then use `ppx-researcher` to upload/write reusable Markdown assets or connect the result to project notes.
+
 ## Workflow
 
 1. Define the evidence need:

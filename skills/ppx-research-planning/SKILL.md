@@ -20,6 +20,12 @@ Use this skill before complex research execution, especially when the task has m
 - Target audience: self, supervisor, coauthors, reviewers, grant panel, or implementation team.
 - Available tools and evidence sources.
 
+## Paper Plane X Toolchain
+
+- Pair with `ppx-researcher` when the plan depends on Paper Plane X project files, literature library state, `ppx librarian` operations, or paper notes.
+- Pair with `ppx-mineru-pdf-to-markdown` when the plan includes local PDF ingestion, scanned papers, formula/table-heavy documents, or PDF-to-Markdown preprocessing.
+- In the plan, name these required skills explicitly under tools or workflow phases so the executor does not rediscover the toolchain.
+
 ## Workflow
 
 1. Inspect first. Read relevant local files, prior conclusions, configs, and git state before asking questions.

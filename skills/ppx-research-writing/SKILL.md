@@ -20,6 +20,12 @@ Use this skill when the user asks for a paper draft, section rewrite, related wo
 - Required tone, length, claim strength, and citation style.
 - Files to edit or create.
 
+## Paper Plane X Toolchain
+
+- Pair with `ppx-researcher` when drafting from Paper Plane X project files, librarian evidence, paper notes, or when writing drafts back into the project sandbox.
+- Pair with `ppx-mineru-pdf-to-markdown` when the draft needs claims grounded in local PDFs that have not yet been converted to Markdown.
+- Prefer writing from local locks and notes first; use `ppx-researcher` for external project-note sync only after the user confirms.
+
 ## Workflow
 
 1. Locate ground truth:

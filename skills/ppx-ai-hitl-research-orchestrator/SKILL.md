@@ -20,6 +20,14 @@ Use this skill when the task involves more than one research phase, unclear scop
 - Known constraints, hypotheses, forbidden routes, or prior conclusions.
 - Available tools: git, shell search, literature systems, PDF parsers, subagents, external knowledge bases.
 
+## Paper Plane X Toolchain
+
+Use this skill as the research workflow router, not as a replacement for tool-specific skills.
+
+- Pair with `ppx-researcher` whenever the task needs Paper Plane X project context, `ppx` CLI commands, project files, librarian search/matrix/deep-dive, or paper-note operations.
+- Pair with `ppx-mineru-pdf-to-markdown` whenever local PDFs need close reading, extraction, citation support, formula/table recovery, or conversion before upload.
+- When delegating subagents, include these skill names explicitly in the child task if the child must use Paper Plane X or MinerU. Example: `skill: "ppx-researcher,ppx-literature-intelligence"`.
+
 ## Workflow
 
 1. Classify the task:
@@ -29,11 +37,14 @@ Use this skill when the task involves more than one research phase, unclear scop
    - Fact/parameter/result freeze: use `ppx-evidence-locking`.
    - Drafting or revision: use `ppx-research-writing`.
    - Review, regression check, or cleanup: use `ppx-research-audit-iteration`.
-2. Ground in the environment before asking questions. Inspect relevant files, git state, existing plans, drafts, analysis notes, and available tools.
-3. For complex tasks, create a short execution plan with phases, outputs, human gates, and quality checks.
-4. Execute progressively: gather evidence, write local artifacts, lock conclusions, then draft or revise.
-5. Keep external synchronization opt-in. Do not upload to paper notes, team systems, or shared knowledge bases until the user confirms.
-6. Use git to track changes. Before modifying files, know what is already dirty and avoid overwriting unrelated user work.
+2. Select toolchain skills when needed:
+   - Paper Plane X project/library work: add `ppx-researcher`.
+   - Local PDF parsing: add `ppx-mineru-pdf-to-markdown`.
+3. Ground in the environment before asking questions. Inspect relevant files, git state, existing plans, drafts, analysis notes, and available tools.
+4. For complex tasks, create a short execution plan with phases, outputs, human gates, and quality checks.
+5. Execute progressively: gather evidence, write local artifacts, lock conclusions, then draft or revise.
+6. Keep external synchronization opt-in. Do not upload to paper notes, team systems, or shared knowledge bases until the user confirms.
+7. Use git to track changes. Before modifying files, know what is already dirty and avoid overwriting unrelated user work.
 
 ## Human Gates
 

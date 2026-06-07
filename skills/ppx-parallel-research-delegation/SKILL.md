@@ -20,6 +20,13 @@ Use this skill when the task benefits from independent exploration, parallel pap
 - Available agent types, tools, skills, permissions, and output locations.
 - Constraints on read/write access and external systems.
 
+## Paper Plane X Toolchain
+
+- Add `ppx-researcher` to any child task that must run `ppx` commands, inspect the Paper Plane X library, read/write project files, or maintain paper notes.
+- Add `ppx-mineru-pdf-to-markdown` to any child task that must process local PDFs before analysis.
+- Add the relevant research workflow skill too. Examples: `skill: "ppx-researcher,ppx-literature-intelligence"` or `skill: "ppx-mineru-pdf-to-markdown,ppx-literature-intelligence"`.
+- Do not assume child agents inherit these skills; name them explicitly in each subagent configuration.
+
 ## Workflow
 
 1. Decide whether delegation is justified. Use it when parallelism reduces uncertainty or improves independence.
