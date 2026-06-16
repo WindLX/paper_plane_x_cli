@@ -13,25 +13,11 @@ Most CLI commands do not import backend tools or access the database directly. P
 
 ## Install
 
-From the monorepo root:
+From the cli directory:
 
 ```bash
-uvx --from ./paper_plane_x_cli ppx --help
-uv tool install ./paper_plane_x_cli
-```
-
-From the backend directory:
-
-```bash
-uvx --from ../paper_plane_x_cli ppx --help
-uv tool install ../paper_plane_x_cli
-```
-
-From a Git repository that contains this package as a subdirectory:
-
-```bash
-uvx --from "git+https://github.com/<owner>/<repo>.git#subdirectory=paper_plane_x_cli" ppx --help
-uv tool install "git+https://github.com/<owner>/<repo>.git#subdirectory=paper_plane_x_cli"
+uvx --from . ppx --help
+uv tool install .
 ```
 
 After `uv tool install`, use `ppx` directly.
