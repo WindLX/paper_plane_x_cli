@@ -7,7 +7,6 @@ This package contains:
 - `ppx`: a JSON-first CLI that talks to a running Paper Plane X FastAPI server.
 - `skills/ppx-researcher`: the Researcher skill for Codex, Claude Code, Pi agents, and other agent tools.
 - `skills/ppx-mineru-pdf-to-markdown`: a PDF-to-Markdown workflow skill backed by MinerU.
-- `skills/ppx-*`: reusable AI+HITL research workflow skills for planning, literature intelligence, delegation, evidence locking, writing, and audit.
 
 Most CLI commands do not import backend tools or access the database directly. Project and librarian commands only call HTTP endpoints under `/api/v1`. The MinerU command is a standalone local utility that calls a MinerU HTTP service directly.
 
@@ -103,20 +102,11 @@ Bundled skills live under `skills/`:
 ```text
 skills/ppx-researcher/SKILL.md
 skills/ppx-mineru-pdf-to-markdown/SKILL.md
-skills/ppx-ai-hitl-research-orchestrator/SKILL.md
-skills/ppx-research-planning/SKILL.md
-skills/ppx-literature-intelligence/SKILL.md
-skills/ppx-parallel-research-delegation/SKILL.md
-skills/ppx-evidence-locking/SKILL.md
-skills/ppx-research-writing/SKILL.md
-skills/ppx-research-audit-iteration/SKILL.md
 ```
 
 Use `ppx-researcher` when an external agent should follow the same research workflow as Paper Plane X: verify project context, search and compare papers through `ppx`, write durable results into project files or paper notes, and cite only evidence actually fetched through the CLI/API.
 
 Use `ppx-mineru-pdf-to-markdown` when an external agent encounters local PDFs and should convert them to Markdown before reading, summarizing, extracting, or uploading the result.
-
-Use the AI+HITL research skills when an agent needs project-independent research planning, literature synthesis, subagent delegation, evidence locks, drafting, or audit workflows. Skill names are intentionally prefixed with `ppx-` so they can be installed together without colliding with generic agent skills.
 
 Install or uninstall all bundled `ppx-*` skills into an agent skill directory:
 
