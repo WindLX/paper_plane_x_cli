@@ -1,42 +1,43 @@
 ---
 name: ppx-mineru-pdf-to-markdown
-description: Use when an agent needs to read, summarize, extract, cite, or process local PDF files by first converting them to Markdown with the Paper Plane X CLI MinerU tool. Trigger for PDF-heavy research, scanned PDFs, papers with formulas/tables, or requests to transform PDFs into Markdown assets.
+description: Convert local PDF files to Markdown with the Paper Plane X CLI MinerU tool before close reading, summarizing, extracting, citing, or uploading. Use for scanned PDFs, research papers, formulas, tables, figures, or requests to create Markdown assets from PDFs.
 ---
 
 # MinerU PDF To Markdown
 
-When the task involves a local PDF, convert it to Markdown before doing close reading, extraction, rewriting, or downstream upload. Prefer Markdown over raw PDF parsing because it preserves text flow, formulas, tables, and referenced images more consistently.
+Use this skill when a task depends on the contents of a local PDF. Convert the PDF to Markdown first, then use the generated Markdown as the evidence source for reading, extraction, summarization, citation, comparison, or downstream upload.
 
 ## Workflow
 
-1. Confirm the PDF exists locally.
-2. Run MinerU conversion:
+1. Confirm the input is a local `.pdf`.
+2. Choose parsing options only when the task needs them:
+   - long PDF trial run: `--start-page-id` and `--end-page-id`
+3. Convert the PDF:
 
 ```bash
 ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru
 ```
 
-3. Read the generated Markdown from the returned `md_path`.
-4. Use the Markdown as the evidence source for summaries, structured extraction, comparison, or edits.
-5. If the result should become a Paper Plane X project asset, upload or write the Markdown through the researcher/project-file workflow.
+4. Read the returned `md_path`.
+5. Preserve any referenced images from `image_paths` when moving or uploading the Markdown.
+6. If the result should become a Paper Plane X project asset, use the researcher/project-file workflow to upload or write it.
 
 ## Command
 
 ```bash
 ppx mineru parse \
   --source ./paper.pdf \
-  --save-dir ./paper-mineru \
+  --save-dir ./paper-mineru
 ```
 
 Important options:
 
 - `--source`: local PDF file path.
 - `--save-dir`: local directory where Markdown and `images/` are written.
-- `--mineru-url`: MinerU HTTP service base URL. If omitted, it is resolved from context (set with `ppx context set --mineru-url`), then the `MINERU_BASE_URL` environment variable, then the default `http://127.0.0.1:8888`.
+- `--mineru-url`: MinerU HTTP service base URL. Resolution order is CLI option, `MINERU_BASE_URL`, local/global context from `ppx context set --mineru-url`, then `http://127.0.0.1:8888`.
 - `--output-md-name`: Markdown filename. Defaults to the PDF stem plus `.md`.
-- `--lang-list`: comma-separated language codes to assist parsing, e.g. `en` or `ch,en`.
-- `--start-page-id` / `--end-page-id`: parse a page range for large PDFs.
-- `timeout`: HTTP timeout in seconds.
+- `--start-page-id` / `--end-page-id`: page range, 0-based start. Use for partial parsing of large PDFs.
+- `--timeout`: HTTP timeout in seconds. Default is `300`.
 
 The command prints JSON:
 
@@ -49,6 +50,6 @@ The command prints JSON:
 
 ## Reading Rules
 
-- Base claims on the generated Markdown, not on guessed PDF contents.
-- If conversion fails, report the MinerU error and ask whether to retry with a different `--mineru-url`.
-- Preserve image references when moving Markdown; copy or upload the associated `images/` files if the target workflow needs figures.
+- Base claims on the generated Markdown, not guessed PDF contents or filenames.
+- If conversion fails, report the CLI error and retry only when there is a clear adjustment: wrong URL, smaller page range, timeout, or different language list.
+- If Markdown contains figure links, keep the `images/` directory together with the Markdown when the target workflow needs figures.

@@ -2,6 +2,17 @@
 
 `ppx` is the HTTP bridge from external agents to Paper Plane X. It calls FastAPI endpoints and prints JSON.
 
+## Contents
+
+- Context
+- Project files
+- Paper notes
+- Librarian commands
+- Query rules
+- Matrix field paths
+- File editing examples
+- Output handling
+
 ## Context
 
 ```bash
@@ -10,60 +21,74 @@ ppx context set --local --project-id prj_y
 ppx context show
 ```
 
-Context precedence is:
+Context precedence:
 
 1. Command flags: `--base-url`, `--project-id`
 2. Environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`
-3. Local context: `./.paper-plane-x/context.json` (in the current working directory)
+3. Local context: `./.paper-plane-x/context.json`
 4. Global context: `~/.config/paper-plane-x/context.json`
 5. Default base URL: `http://127.0.0.1:8000/api/v1`
 
-The local context overrides the global context, allowing per-project settings without changing global defaults. Use `--local` with `ppx context set` to write to the local context file.
+Run `ppx context show` before project-scoped work. Most project file and librarian commands require `project_id`.
 
-Run `ppx context show` before project-scoped work. Most project file and project librarian commands require `project_id`.
+## Project Files
 
-## Tool Name To CLI Mapping
+| Researcher action     | CLI command                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------- |
+| List files            | `ppx files list --dir /`                                                                              |
+| Read whole file       | `ppx files read --path /notes/idea.md`                                                                |
+| Read line range       | `ppx files lines --path /draft.md --start-line 10 --end-line 20`                                      |
+| Find text             | `ppx files find --path /draft.md --query "Related Work"`                                              |
+| Write/overwrite file  | `ppx files write --path /notes/summary.md --content "..."`                                            |
+| Upload local file     | `ppx files upload --source ./summary.md --path /notes/summary.md`                                     |
+| Replace line range    | `ppx files replace-lines --path /draft.md --start-line 4 --end-line 6 --new-text "..."`               |
+| Replace exact text    | `ppx files replace-text --path /draft.md --old-text "..." --new-text "..."`                           |
+| Anchor patch          | `ppx files patch --path /draft.md --action insert_after --anchor-text "## Methods\n" --content "..."` |
+| Delete file/empty dir | `ppx files delete --path /tmp/old.md`                                                                 |
 
-### Project Files
+File editing rules:
 
-| Researcher tool              | CLI command                                                                                           |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `list_project_files`         | `ppx files list --dir /`                                                                              |
-| `read_project_file`          | `ppx files read --path /notes/idea.md`                                                                |
-| `read_project_file_lines`    | `ppx files lines --path /draft.md --start-line 10 --end-line 20`                                      |
-| `find_in_project_file`       | `ppx files find --path /draft.md --query "Related Work"`                                              |
-| `write_project_file`         | `ppx files write --path /notes/summary.md --content "..."`                                            |
-| local file upload            | `ppx files upload --source ./summary.md --path /notes/summary.md`                                     |
-| `replace_project_file_lines` | `ppx files replace-lines --path /draft.md --start-line 4 --end-line 6 --new-text "..."`               |
-| `replace_project_file_text`  | `ppx files replace-text --path /draft.md --old-text "..." --new-text "..."`                           |
-| `patch_project_file`         | `ppx files patch --path /draft.md --action insert_after --anchor-text "## Methods\n" --content "..."` |
-| `remove_project_file`        | `ppx files delete --path /tmp/old.md`                                                                 |
+- Inspect before editing: use `list`, `read`, `lines`, or `find`.
+- Prefer the smallest reliable edit: `replace-lines` for known line ranges, `replace-text` for unique fixed text, `patch` for anchor-based edits.
+- Use `write` only for new files or intentional full-file regeneration.
+- Use `upload` when a local file already exists; do not paste large local files into `write`.
+- `replace-text` and `patch` support `--expected-occurrences`; use it for safety. `replace-text` also supports `--replace-all`.
+- If an edit command fails because line numbers, matches, or paths changed, re-read or re-find before retrying.
+- Line numbers are 1-based, and `end_line` is inclusive.
+- Project files must stay inside the sandbox and use one of: `.csv`, `.json`, `.md`, `.txt`, `.yaml`, `.yml`, `.toml`.
+- Single-file size limit is 10485760 bytes.
 
-Patch actions are `replace`, `insert_before`, `insert_after`, and `delete`. `replace-text` and `patch` support `--expected-occurrences`; use it to avoid accidental multi-match edits. `replace-text` also supports `--replace-all`.
+## Paper Notes
 
-### Paper Notes
+| Researcher action | CLI command                                          |
+| ----------------- | ---------------------------------------------------- |
+| Read note         | `ppx paper-note get --paper-id p1`                   |
+| Write/update note | `ppx paper-note write --paper-id p1 --content "..."` |
+| Delete note       | `ppx paper-note delete --paper-id p1`                |
 
-| Researcher tool           | CLI command                                          |
-| ------------------------- | ---------------------------------------------------- |
-| `get_paper_agent_note`    | `ppx paper-note get --paper-id p1`                   |
-| `write_paper_agent_note`  | `ppx paper-note write --paper-id p1 --content "..."` |
-| `update_paper_agent_note` | `ppx paper-note write --paper-id p1 --content "..."` |
-| `delete_paper_agent_note` | `ppx paper-note delete --paper-id p1`                |
+Paper notes are for stable, reusable conclusions about one paper. Read existing notes before overwriting.
 
-Paper notes are for stable, reusable conclusions about one paper.
+## Librarian Commands
 
-### Librarian
+| Researcher action | CLI command                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| Project overview  | `ppx project global-finder`                                                                             |
+| Search papers     | `ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20`                      |
+| Matrix fields     | `ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan,synthesis_data.methodology.innovation` |
+| Deep dive         | `ppx librarian deep-dive --paper-id p1 --question "What is the main control objective?"`                |
 
-| Researcher tool  | CLI command                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| `global_finder`  | `ppx project global-finder`                                                                             |
-| `search_paper`   | `ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20`                      |
-| `matrix_compare` | `ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan,synthesis_data.methodology.innovation` |
-| `deep_dive`      | `ppx librarian deep-dive --paper-id p1 --question "What is the main control objective?"`                |
+Selection guide:
 
-Use `search_paper` to find candidate `paper_id`s, `matrix_compare` to compare structured fields, and `deep_dive` for focused single-paper questions that cannot be answered from structured fields.
+- Use `search` to find candidate `paper_id`s by topic, keyword, title, venue, year, or structured field condition.
+- Use `global-finder` for project-wide browsing or when you do not yet know useful keywords.
+- Use `matrix` for multi-paper comparison and structured extraction. Prefer specific field paths.
+- Use `deep-dive` for focused single-paper questions that cannot be answered from structured fields.
 
-## Query Examples
+If `search` returns no results, retry once with fewer conditions, broader fields, or synonyms. If `global-finder` shows no relevant candidates, tell the user what was tried.
+
+## Query Rules
+
+Examples:
 
 ```bash
 ppx librarian search --query-expr "(meta.title CONTAINS transformer)"
@@ -77,10 +102,15 @@ Rules:
 - Use parentheses around conditions.
 - Combine conditions with `AND` and `OR`.
 - Use `CONTAINS` for text fields.
-- Use `BETWEEN [start, end]` for `year` / `meta.year`.
+- Use `BETWEEN [start, end]` for `year` or `meta.year`.
 - Quote values with spaces or special characters.
+- Search filters out papers with failed extraction or failed fact check status.
 
-## Matrix Field Examples
+## Matrix Field Paths
+
+Use dot notation for `--field-paths`. Use `[0]` for array items. Prefer narrow paths over broad roots unless the task needs full reports.
+
+Examples:
 
 ```bash
 ppx librarian matrix --paper-ids p1,p2 --field-paths meta,quick_scan
@@ -88,7 +118,89 @@ ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan.verdict,quick_sc
 ppx librarian matrix --paper-ids p1,p2 --field-paths synthesis_data.methodology.innovation,analysis_report.core_formulation.objective_function
 ```
 
-Prefer specific field paths over broad roots when possible. This keeps context small and makes comparisons easier.
+Common roots:
+
+- `md_content`: original Markdown full text.
+- `meta`: title, authors, year, publication, DOI, raw PDF info, custom metadata.
+- `quick_scan`: tags, verdict, reason, short summary.
+- `synthesis_data`: research gap, methodology, key results, review summary.
+- `analysis_report`: prerequisites, core formulation, derivation steps, related references.
+
+Compact schema:
+
+```ts
+type CitationText = {
+  text: string;
+  citations: Array<{ quote: string; source_header: string }>;
+};
+
+type PaperMatrixFields = {
+  md_content: string;
+  meta: {
+    title: string;
+    authors: string[];
+    year: number;
+    publication: string;
+    doi: string;
+    raw_pdf_path: string;
+    raw_pdf_sha256: string;
+    custom_meta: Record<string, unknown>;
+  };
+  quick_scan: {
+    tags: string[];
+    verdict: string;
+    reason: string;
+    quick_summary: string;
+  };
+  synthesis_data: {
+    research_gap: {
+      context: CitationText;
+      existing_limit: CitationText;
+      motivation: CitationText;
+    };
+    methodology: {
+      approach_name: string;
+      core_logic: CitationText;
+      innovation: CitationText;
+      disadvantage: CitationText;
+      future_direction: CitationText;
+    };
+    key_results: {
+      dataset_env: CitationText;
+      baseline: CitationText;
+      performance: CitationText;
+    };
+    review_summary: CitationText;
+  };
+  analysis_report: {
+    prerequisites: Array<{
+      concept_name: string;
+      brief_explanation: string;
+      relevance_to_paper: CitationText;
+    }>;
+    core_formulation: {
+      problem_definition: CitationText;
+      objective_function: CitationText;
+      algorithm_flow: CitationText;
+    };
+    derivation_steps: Array<{
+      step_order: number;
+      step_name: string;
+      detail_explanation: CitationText;
+    }>;
+    related_references: Array<{ title: string; reason: string }>;
+  };
+};
+```
+
+Useful paths:
+
+- `meta.title`
+- `quick_scan.tags[0]`
+- `synthesis_data.methodology.innovation.text`
+- `analysis_report.prerequisites[0].concept_name`
+- `analysis_report.core_formulation.objective_function.text`
+- `analysis_report.derivation_steps[0].detail_explanation.text`
 
 ## File Editing Examples
 
@@ -124,10 +236,10 @@ Upload a local file into the project sandbox:
 ppx files upload --source ./lit-review.md --path /notes/lit-review.md
 ```
 
-If `--path` is omitted, the CLI uploads to `/<source filename>`. Upload uses the same sandbox rules as project files: target path must stay inside the project, extension must be allowed, and file size must be at most 10485760 bytes.
+If `--path` is omitted, upload targets `/<source filename>`.
 
 ## Output Handling
 
 - Every command prints JSON.
-- Treat a JSON `error` or non-zero command exit as a failed tool call.
-- Do not infer missing paper facts from filenames, titles, or prior memory; fetch evidence with librarian tools.
+- Treat non-zero exit status or JSON `error` as a failed tool call.
+- Do not infer missing paper facts from filenames, titles, or memory; fetch evidence with librarian tools.

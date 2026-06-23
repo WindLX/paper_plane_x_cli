@@ -1,5 +1,7 @@
 # Paper Plane X CLI
 
+English | [中文](README.zh.md)
+
 Standalone HTTP CLI and external-agent skills for Paper Plane X.
 
 This package contains:
@@ -8,7 +10,7 @@ This package contains:
 - `skills/ppx-researcher`: the Researcher skill for Codex, Claude Code, Pi agents, and other agent tools.
 - `skills/ppx-mineru-pdf-to-markdown`: a PDF-to-Markdown workflow skill backed by MinerU.
 
-Most CLI commands do not import backend tools or access the database directly. Project and librarian commands only call HTTP endpoints under `/api/v1`. The MinerU command is a standalone local utility that calls a MinerU HTTP service directly.
+Project and librarian commands only call HTTP endpoints under `/api/v1`. The MinerU command is a standalone local utility that calls a MinerU HTTP service directly.
 
 ## Install
 
@@ -90,8 +92,6 @@ The command writes Markdown plus referenced images and prints JSON:
 Useful options:
 
 ```bash
-ppx mineru parse --source ./scan.pdf --save-dir ./scan-mineru --parse-method ocr
-ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru --lang-list ch,en
 ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru --start-page-id 0 --end-page-id 10
 ```
 
