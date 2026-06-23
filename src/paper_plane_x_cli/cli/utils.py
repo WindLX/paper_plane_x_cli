@@ -12,7 +12,6 @@ import httpx
 import typer
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/api/v1"
-DEFAULT_MINERU_URL = "http://127.0.0.1:8888"
 GLOBAL_CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 GLOBAL_CONTEXT_PATH = GLOBAL_CONTEXT_DIR / "paper-plane-x" / "context.json"
 LOCAL_CONTEXT_PATH = Path.cwd() / ".paper-plane-x" / "context.json"
@@ -47,7 +46,6 @@ def save_context(data: dict[str, str], path: Path) -> None:
 def resolve_context(
     base_url: str | None = None,
     project_id: str | None = None,
-    mineru_url: str | None = None,
 ) -> dict[str, str | None]:
     global_ctx = load_context(GLOBAL_CONTEXT_PATH)
     local_ctx = load_context(LOCAL_CONTEXT_PATH)
@@ -61,16 +59,9 @@ def resolve_context(
     resolved_project_id = (
         project_id or os.environ.get("PPX_PROJECT_ID") or merged.get("project_id")
     )
-    resolved_mineru_url = (
-        mineru_url
-        or os.environ.get("PPX_MINERU_URL")
-        or merged.get("mineru_url")
-        or DEFAULT_MINERU_URL
-    )
     return {
         "base_url": resolved_base_url.rstrip("/"),
         "project_id": resolved_project_id,
-        "mineru_url": resolved_mineru_url.rstrip("/"),
     }
 
 

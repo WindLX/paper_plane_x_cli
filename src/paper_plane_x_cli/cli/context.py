@@ -54,13 +54,6 @@ def context_set(
             "--project-id", help="Project ID to save for project-scoped commands."
         ),
     ] = None,
-    set_mineru_url: Annotated[
-        str | None,
-        typer.Option(
-            "--mineru-url",
-            help="MinerU HTTP base URL to save. Defaults to http://127.0.1:8888.",
-        ),
-    ] = None,
     local: Annotated[
         bool,
         typer.Option(
@@ -75,7 +68,5 @@ def context_set(
         data["base_url"] = set_base_url.rstrip("/")
     if set_project_id is not None:
         data["project_id"] = set_project_id
-    if set_mineru_url is not None:
-        data["mineru_url"] = set_mineru_url.rstrip("/")
     save_context(data, path)
     print_json(data)

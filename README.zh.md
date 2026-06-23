@@ -8,9 +8,9 @@ Paper Plane X 的独立 HTTP CLI 与外部 Agent 技能集。
 
 - `ppx`：一个 JSON 优先的 CLI，用于与运行中的 Paper Plane X FastAPI 服务通信。
 - `skills/ppx-researcher`：面向 Codex、Claude Code、Pi agent 等 Agent 工具的 Researcher 技能。
-- `skills/ppx-mineru-pdf-to-markdown`：基于 MinerU 的 PDF 转 Markdown 工作流技能。
+- `skills/ppx-pdf-to-markdown`：基于 Paper Plane X API 的 PDF 转 Markdown 工作流技能。
 
-`project` 与 `librarian` 命令仅调用 `/api/v1` 下的 HTTP 端点。`mineru` 命令是一个独立的本地工具，直接调用 MinerU HTTP 服务。
+所有命令均调用运行中 Paper Plane X 服务 `/api/v1` 下的 HTTP 端点。
 
 ## 安装
 
@@ -27,11 +27,11 @@ uv tool install .
 
 `ppx` 按以下优先级解析上下文：
 
-1. 命令行选项：`--base-url`、`--project-id`、`--mineru-url`
-2. 环境变量：`PPX_BASE_URL`、`PPX_PROJECT_ID`、`PPX_MINERU_URL`
+1. 命令行选项：`--base-url`、`--project-id`
+2. 环境变量：`PPX_BASE_URL`、`PPX_PROJECT_ID`
 3. 本地上下文文件：当前工作目录下的 `./.paper-plane-x/context.json`
 4. 全局上下文文件：`~/.config/paper-plane-x/context.json`
-5. 默认值：base URL 为 `http://127.0.0.1:8000/api/v1`，MinerU URL 为 `http://127.0.0.1:8888`
+5. 默认值：base URL 为 `http://127.0.0.1:8000/api/v1`
 
 本地上下文会覆盖全局上下文，因此可以在不修改全局默认配置的情况下为每个项目单独设置。
 
@@ -39,7 +39,6 @@ uv tool install .
 # 全局上下文（默认）
 ppx context set --base-url http://127.0.0.1:8000/api/v1
 ppx context set --project-id prj_x
-ppx context set --mineru-url http://127.0.0.1:8888
 
 # 本地上下文（仅当前目录）
 ppx context set --local --project-id prj_y
@@ -70,29 +69,22 @@ ppx paper-note delete --paper-id p1
 
 `files upload` 遵循与项目文件相同的沙箱规则：仅允许文本/数据扩展名、禁止路径穿越、单文件大小限制 10MB。
 
-## MinerU PDF 转换
+## PDF 解析
 
-当外部 Agent 需要以 Markdown 形式读取或处理本地 PDF 时，使用 MinerU：
+当外部 Agent 需要以 Markdown 形式读取或处理本地 PDF 时，使用 PDF 解析命令：
 
 ```bash
-ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru
+ppx pdf parse --source ./paper.pdf --save-dir ./paper-pdf
 ```
 
-MinerU URL 的解析顺序与其他上下文值一致：`--mineru-url` 选项、`MINERU_BASE_URL` 环境变量、本地/全局上下文文件（`ppx context set --mineru-url`），最后为默认值 `http://127.0.0.1:8888`。
-
-该命令会写入 Markdown 及引用的图片，并输出如下 JSON：
+该命令将 PDF 上传到 Paper Plane X API，写入 Markdown 及引用的图片，并输出如下 JSON：
 
 ```json
 {
-  "md_path": "paper-mineru/paper.md",
-  "image_paths": ["paper-mineru/images/fig1.png"]
+  "md_path": "paper-pdf/paper.md",
+  "image_paths": ["paper-pdf/images/fig1.png"],
+  "parser_type": "local_mineru"
 }
-```
-
-常用选项：
-
-```bash
-ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru --start-page-id 0 --end-page-id 10
 ```
 
 ## 技能
@@ -101,12 +93,12 @@ ppx mineru parse --source ./paper.pdf --save-dir ./paper-mineru --start-page-id 
 
 ```text
 skills/ppx-researcher/SKILL.md
-skills/ppx-mineru-pdf-to-markdown/SKILL.md
+skills/ppx-pdf-to-markdown/SKILL.md
 ```
 
 当外部 Agent 需要遵循 Paper Plane X 的研究工作流时，使用 `ppx-researcher`：校验项目上下文、通过 `ppx` 搜索并对比论文、将结果写入项目文件或 paper note，并且只引用通过 CLI/API 实际获取到的证据。
 
-当外部 Agent 遇到本地 PDF 需要先转换为 Markdown 再进行阅读、摘要、抽取或上传时，使用 `ppx-mineru-pdf-to-markdown`。
+当外部 Agent 遇到本地 PDF 需要先转换为 Markdown 再进行阅读、摘要、抽取或上传时，使用 `ppx-pdf-to-markdown`。
 
 安装或卸载所有自带的 `ppx-*` 技能到 Agent 技能目录：
 

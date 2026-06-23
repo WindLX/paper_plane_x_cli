@@ -51,7 +51,6 @@ def test_context_precedence_args_env_file(
     ) == {
         "base_url": "http://arg/api/v1",
         "project_id": "arg-project",
-        "mineru_url": "http://127.0.0.1:8888",
     }
 
 
@@ -95,7 +94,7 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     install_payload = json.loads(install_result.output)
     assert "ppx-researcher" in install_payload["installed"]
     assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
-    assert (target_dir / "ppx-evidence-locking" / "SKILL.md").exists()
+    assert (target_dir / "ppx-pdf-to-markdown" / "SKILL.md").exists()
 
     second_install = runner.invoke(
         cli.app,
