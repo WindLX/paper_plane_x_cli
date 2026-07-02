@@ -88,6 +88,13 @@ def librarian_deep_dive(
         str,
         typer.Option("--question", help="Focused question for the Deep Diver agent."),
     ],
+    timeout: Annotated[
+        int,
+        typer.Option(
+            "--timeout",
+            help="Timeout in seconds for the Deep Diver agent to answer the question.",
+        ),
+    ] = 240,
 ) -> None:
     ctx_dict = ctx.obj["ctx"]
     payload = request(
@@ -95,6 +102,6 @@ def librarian_deep_dive(
         "/librarian/deep-dive",
         ctx=ctx_dict,
         json_body={"paper_id": paper_id, "question": question},
-        timeout=240,
+        timeout=timeout,
     )
     print_json(payload)
