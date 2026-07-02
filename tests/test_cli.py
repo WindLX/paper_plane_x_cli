@@ -74,6 +74,14 @@ def test_nested_command_help_includes_descriptions() -> None:
     assert "Sandbox destination path" in output
 
 
+def test_paper_markdown_help_is_registered() -> None:
+    result = runner.invoke(cli.app, ["paper", "markdown", "--help"])
+
+    assert result.exit_code == 0
+    assert "Download a paper's parsed Markdown text" in result.output
+    assert "Directory where the Markdown" in result.output
+
+
 def test_cli_no_args_shows_help_without_traceback() -> None:
     result = runner.invoke(cli.app)
 
@@ -95,6 +103,12 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     assert "ppx-researcher" in install_payload["installed"]
     assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
     assert (target_dir / "ppx-pdf-to-markdown" / "SKILL.md").exists()
+    assert "ppx paper markdown" in (
+        target_dir / "ppx-researcher" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "ppx paper markdown" in (
+        target_dir / "ppx-pdf-to-markdown" / "SKILL.md"
+    ).read_text(encoding="utf-8")
 
     second_install = runner.invoke(
         cli.app,

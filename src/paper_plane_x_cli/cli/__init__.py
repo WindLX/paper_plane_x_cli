@@ -12,6 +12,7 @@ import typer
 from paper_plane_x_cli.cli.context import context_app
 from paper_plane_x_cli.cli.files import files_app
 from paper_plane_x_cli.cli.librarian import librarian_app
+from paper_plane_x_cli.cli.paper import paper_app
 from paper_plane_x_cli.cli.paper_note import paper_note_app
 from paper_plane_x_cli.cli.pdf import pdf_app
 from paper_plane_x_cli.cli.project import project_app
@@ -79,6 +80,7 @@ app.add_typer(project_app, name="project")
 app.add_typer(pdf_app, name="pdf")
 app.add_typer(librarian_app, name="librarian")
 app.add_typer(files_app, name="files")
+app.add_typer(paper_app, name="paper")
 app.add_typer(paper_note_app, name="paper-note")
 app.add_typer(skills_app, name="skills")
 

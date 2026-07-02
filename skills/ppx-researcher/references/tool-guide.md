@@ -6,6 +6,7 @@
 
 - Context
 - Project files
+- Paper resources
 - Paper notes
 - Librarian commands
 - Query rules
@@ -67,6 +68,20 @@ File editing rules:
 | Delete note       | `ppx paper-note delete --paper-id p1`                |
 
 Paper notes are for stable, reusable conclusions about one paper. Read existing notes before overwriting.
+
+## Paper Resources
+
+Download a paper's complete stored parsed Markdown:
+
+```bash
+ppx paper markdown --paper-id p1 --save-dir ./paper-markdown
+```
+
+The default output path is `./paper-markdown/p1.md`. Use `--output-md-name full-paper.md` to choose another `.md` filename. The command prints `paper_id`, `md_path`, and `bytes_written`.
+
+Use this command when full-text reading or local processing needs the complete Markdown. It does not include the paper's extracted images or original PDF.
+
+Because full paper files are usually long, prefer delegating focused sections or questions to sub-agents when that capability is available. Otherwise, read the Markdown in targeted chunks rather than loading the entire file at once.
 
 ## Librarian Commands
 

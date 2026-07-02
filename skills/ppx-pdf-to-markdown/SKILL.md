@@ -7,18 +7,25 @@ description: Convert local PDF files to Markdown with the Paper Plane X CLI befo
 
 Use this skill when a task depends on the contents of a local PDF. Convert the PDF to Markdown first, then use the generated Markdown as the evidence source for reading, extraction, summarization, citation, comparison, or downstream upload.
 
+If the source is already a Paper Plane X paper with a `paper_id`, download its stored parsed Markdown instead of uploading and parsing the PDF again:
+
+```bash
+ppx paper markdown --paper-id <paper_id> --save-dir ./paper-markdown
+```
+
 ## Workflow
 
-1. Confirm the input is a local `.pdf`.
-2. Convert the PDF:
+1. Determine whether the source is an existing Paper Plane X `paper_id` or a local `.pdf`.
+2. For an existing paper, run `ppx paper markdown`, read the returned `md_path`, and stop. This download contains Markdown only, without extracted images.
+3. For a local PDF, convert it:
 
 ```bash
 ppx pdf parse --source ./paper.pdf --save-dir ./paper-pdf
 ```
 
-3. Read the returned `md_path`.
-4. Preserve any referenced images from `image_paths` when moving or uploading the Markdown.
-5. If the result should become a Paper Plane X project asset, use the researcher/project-file workflow to upload or write it.
+4. Read the returned `md_path`.
+5. Preserve any referenced images from `image_paths` when moving or uploading the Markdown.
+6. If the result should become a Paper Plane X project asset, use the researcher/project-file workflow to upload or write it.
 
 ## Command
 

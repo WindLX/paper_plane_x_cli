@@ -1,6 +1,6 @@
 ---
 name: ppx-researcher
-description: Use Paper Plane X as a project-scoped academic research assistant through the ppx HTTP CLI. Use for project literature search, paper comparison, single-paper deep dives, research synthesis, project notes, drafts, and paper-level AI notes.
+description: Use Paper Plane X as a project-scoped academic research assistant through the ppx HTTP CLI. Use for project literature search, paper comparison, single-paper deep dives, full parsed Markdown retrieval, research synthesis, project notes, drafts, and paper-level AI notes.
 ---
 
 # Paper Plane X Researcher
@@ -32,6 +32,7 @@ Read `references/tool-guide.md` when you need exact CLI syntax, query rules, fil
 - Use evidence for project-paper facts. Search, matrix, deep-dive, project files, or paper notes before making claims about papers.
 - Keep command chains minimal but sufficient. Each `ppx` call should answer a specific question.
 - Prefer structured fields via `ppx librarian matrix` before deep-diving; use `deep-dive` for focused questions that structured reports do not answer.
+- Download a paper's parsed Markdown when the task needs its complete original text rather than selected structured fields or a focused deep-dive answer.
 - For reusable outputs, consider saving or updating project files or paper notes instead of leaving long-lived work only in chat.
 - Preserve existing project documents. Inspect before editing, prefer local edits, and avoid whole-file overwrite unless the file is intentionally being regenerated.
 - If a command fails or returns JSON `error`, treat it as failed evidence. Re-check context, path, query syntax, or current file contents before retrying.
@@ -57,6 +58,12 @@ For unclear mechanisms, equations, experiments, or claims in one important paper
 ### Single-Paper Notes
 
 Use `ppx paper-note get` before relying on or replacing an existing AI note. Use `ppx paper-note write` for stable, reusable conclusions about one paper.
+
+### Full Paper Text
+
+Use `ppx paper markdown --paper-id <paper_id> --save-dir <directory>` when the user needs the complete parsed Markdown or when close reading requires the full source text. Read the returned `md_path`; do not reparse a local PDF when the paper already exists in Paper Plane X.
+
+Full paper Markdown is usually long. When sub-agent or delegation tools are available, prefer assigning focused sections or questions to sub-agents and synthesize their evidence-backed findings. Otherwise, inspect the file in targeted chunks instead of loading the whole document into context at once.
 
 ### Project Files and Drafts
 

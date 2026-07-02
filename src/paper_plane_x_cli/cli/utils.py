@@ -97,6 +97,44 @@ def request(
     files: dict[str, Any] | None = None,
     timeout: float = 60.0,
 ) -> object:
+    response = _request_response(
+        method,
+        path,
+        ctx,
+        json_body=json_body,
+        params=params,
+        data=data,
+        files=files,
+        timeout=timeout,
+    )
+
+    if not response.content:
+        return {}
+    return response.json()
+
+
+def request_bytes(
+    method: str,
+    path: str,
+    ctx: dict[str, str | None],
+    *,
+    timeout: float = 60.0,
+) -> bytes:
+    response = _request_response(method, path, ctx, timeout=timeout)
+    return response.content
+
+
+def _request_response(
+    method: str,
+    path: str,
+    ctx: dict[str, str | None],
+    *,
+    json_body: object | None = None,
+    params: dict[str, QueryParamValue | None] | None = None,
+    data: dict[str, str] | None = None,
+    files: dict[str, Any] | None = None,
+    timeout: float = 60.0,
+) -> httpx.Response:
     base_url = ctx["base_url"]
     url = f"{base_url}{path}"
     cleaned_params = (
@@ -112,7 +150,7 @@ def request(
             params=cleaned_params,
             data=data,
             files=files,
-            timeout=60.0,
+            timeout=timeout,
         )
     except httpx.HTTPError as exc:
         fail(f"HTTP request failed: {exc}", status_code=1)
@@ -130,6 +168,4 @@ def request(
             status_code=1,
         )
 
-    if not response.content:
-        return {}
-    return response.json()
+    return response

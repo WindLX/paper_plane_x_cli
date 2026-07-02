@@ -54,6 +54,8 @@ ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20
 ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan,synthesis_data.methodology.innovation
 ppx librarian deep-dive --paper-id p1 --question "What is the core contribution?"
 
+ppx paper markdown --paper-id p1 --save-dir ./paper-markdown
+
 ppx files list --dir /
 ppx files read --path /notes/idea.md
 ppx files upload --source ./idea.md --path /notes/idea.md
@@ -68,6 +70,9 @@ ppx paper-note delete --paper-id p1
 All tool commands print JSON to stdout. HTTP and validation failures print structured JSON to stderr and exit non-zero.
 
 `files upload` uses the same sandbox rules as project files: allowed text/data extensions only, no path traversal, and a 10MB per-file limit.
+
+`paper markdown` downloads the paper's stored parsed Markdown. The output filename
+defaults to `<paper-id>.md`; use `--output-md-name full-paper.md` to override it.
 
 ## PDF Parsing
 
