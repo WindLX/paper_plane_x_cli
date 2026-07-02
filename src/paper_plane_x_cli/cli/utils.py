@@ -152,6 +152,13 @@ def _request_response(
             files=files,
             timeout=timeout,
         )
+    except httpx.TimeoutException:
+        fail(
+            f"HTTP request timed out after {timeout:g}s. "
+            "The backend may still be processing the request; for long agent calls, "
+            "increase both the CLI --timeout and the outer tool execution timeout.",
+            status_code=1,
+        )
     except httpx.HTTPError as exc:
         fail(f"HTTP request failed: {exc}", status_code=1)
 

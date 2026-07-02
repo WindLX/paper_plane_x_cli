@@ -90,14 +90,15 @@ Because full paper files are usually long, prefer delegating focused sections or
 | Project overview  | `ppx project global-finder`                                                                             |
 | Search papers     | `ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20`                      |
 | Matrix fields     | `ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan,synthesis_data.methodology.innovation` |
-| Deep dive         | `ppx librarian deep-dive --paper-id p1 --question "What is the main control objective?" --timeout 240`  |
+| Deep dive         | `ppx librarian deep-dive --paper-id p1 --question "What is the main control objective?" --timeout 600`  |
 
 Selection guide:
 
 - Use `search` to find candidate `paper_id`s by topic, keyword, title, venue, year, or structured field condition.
 - Use `global-finder` for project-wide browsing or when you do not yet know useful keywords.
 - Use `matrix` for multi-paper comparison and structured extraction. Prefer specific field paths.
-- Use `deep-dive` for focused single-paper questions that cannot be answered from structured fields. You can set timeout parameters to replace the default value (=240).
+- Use `deep-dive` for focused single-paper questions that cannot be answered from structured fields. Override `--timeout` only when the 600-second default is unsuitable.
+- Deep-dive defaults to a 600-second CLI timeout. If a shell, agent, or tool runner wraps the command, its execution timeout must be at least as long; otherwise it can kill the CLI while the backend is still working.
 
 If `search` returns no results, retry once with fewer conditions, broader fields, or synonyms. If `global-finder` shows no relevant candidates, tell the user what was tried.
 

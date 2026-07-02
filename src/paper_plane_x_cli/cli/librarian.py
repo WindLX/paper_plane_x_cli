@@ -93,8 +93,9 @@ def librarian_deep_dive(
         typer.Option(
             "--timeout",
             help="Timeout in seconds for the Deep Diver agent to answer the question.",
+            min=1,
         ),
-    ] = 240,
+    ] = 600,
 ) -> None:
     ctx_dict = ctx.obj["ctx"]
     payload = request(

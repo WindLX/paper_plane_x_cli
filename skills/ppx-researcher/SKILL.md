@@ -55,6 +55,8 @@ Use `ppx librarian matrix` to compare multiple papers or extract structured fiel
 
 For unclear mechanisms, equations, experiments, or claims in one important paper, use `ppx librarian deep-dive --paper-id ... --question ...`.
 
+Deep-dive is a long-running AI call. Use its 600-second default CLI timeout, and when invoking it through a shell or tool runner, set that runner's execution timeout to at least the same value. Multiple deep-dives may run concurrently, but keep each question focused to reduce empty structured responses and retries.
+
 ### Single-Paper Notes
 
 Use `ppx paper-note get` before relying on or replacing an existing AI note. Use `ppx paper-note write` for stable, reusable conclusions about one paper.

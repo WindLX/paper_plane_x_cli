@@ -187,6 +187,68 @@ def test_librarian_search_builds_http_request(
     assert json.loads(result.output)["paper_ids"] == ["p1"]
 
 
+def test_librarian_deep_dive_uses_long_default_timeout(
+    monkeypatch,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_request(method: str, url: str, **kwargs: Any) -> httpx.Response:
+        captured.update({"method": method, "url": url, **kwargs})
+        return httpx.Response(
+            200,
+            json={
+                "paper_id": "p1",
+                "question": "q",
+                "answer": {"is_answered": False, "answer": {}},
+            },
+            request=httpx.Request(method, url),
+        )
+
+    monkeypatch.setattr(cli.httpx, "request", fake_request)
+
+    result = runner.invoke(
+        cli.app,
+        [
+            "librarian",
+            "deep-dive",
+            "--paper-id",
+            "p1",
+            "--question",
+            "q",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["timeout"] == 600
+
+
+def test_librarian_deep_dive_timeout_explains_outer_timeout(
+    monkeypatch,
+) -> None:
+    def fake_request(method: str, url: str, **kwargs: Any) -> httpx.Response:
+        raise httpx.ReadTimeout("timed out")
+
+    monkeypatch.setattr(cli.httpx, "request", fake_request)
+
+    result = runner.invoke(
+        cli.app,
+        [
+            "librarian",
+            "deep-dive",
+            "--paper-id",
+            "p1",
+            "--question",
+            "q",
+            "--timeout",
+            "5",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "timed out after 5s" in result.output
+    assert "outer tool execution timeout" in result.output
+
+
 def test_files_upload_builds_multipart_request(
     tmp_path: Path,
     monkeypatch,
