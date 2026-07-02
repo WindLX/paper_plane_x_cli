@@ -95,6 +95,7 @@ def request(
     params: dict[str, QueryParamValue | None] | None = None,
     data: dict[str, str] | None = None,
     files: dict[str, Any] | None = None,
+    timeout: float = 60.0,
 ) -> object:
     base_url = ctx["base_url"]
     url = f"{base_url}{path}"

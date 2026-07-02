@@ -95,5 +95,6 @@ def librarian_deep_dive(
         "/librarian/deep-dive",
         ctx=ctx_dict,
         json_body={"paper_id": paper_id, "question": question},
+        timeout=240,
     )
     print_json(payload)
