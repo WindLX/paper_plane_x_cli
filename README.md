@@ -170,3 +170,7 @@ If you installed skills into a custom directory, pass the same directory when un
 ```bash
 ppx skills uninstall --target-dir ~/.agents/skills
 ```
+
+## License
+
+Paper Plane X CLI is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).

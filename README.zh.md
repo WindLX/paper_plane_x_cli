@@ -165,3 +165,7 @@ uv tool uninstall paper-plane-x-cli
 ```bash
 ppx skills uninstall --target-dir ~/.agents/skills
 ```
+
+## License
+
+Paper Plane X CLI 使用 [GNU Affero General Public License v3.0 or later](LICENSE)。

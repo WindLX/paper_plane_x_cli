@@ -3,6 +3,7 @@ name = "paper-plane-x-cli"
 version = "0.1.0"
 description = "HTTP CLI and external-agent skills for Paper Plane X"
 readme = "README.md"
+license = "AGPL-3.0-or-later"
 authors = [{ name = "windlx", email = "1418043337@qq.com" }]
 requires-python = ">=3.12"
 dependencies = [
@@ -34,6 +35,7 @@ packages = ["src/paper_plane_x_cli"]
 include = [
     "src/paper_plane_x_cli",
     "skills",
+    "LICENSE",
     "README.md",
     "pyproject.toml",
 ]
