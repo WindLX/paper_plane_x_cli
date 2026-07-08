@@ -130,6 +130,40 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     assert not (target_dir / "ppx-researcher").exists()
 
 
+def test_skills_install_defaults_to_codex_skills_dir(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    home_dir = tmp_path / "home"
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    monkeypatch.setenv("HOME", str(home_dir))
+
+    install_result = runner.invoke(cli.app, ["skills", "install"])
+
+    assert install_result.exit_code == 0
+    payload = json.loads(install_result.output)
+    target_dir = home_dir / ".codex" / "skills"
+    assert payload["target_dir"] == str(target_dir)
+    assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
+    assert (target_dir / "ppx-pdf-to-markdown" / "SKILL.md").exists()
+
+
+def test_skills_install_respects_codex_home(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    codex_home = tmp_path / "codex-home"
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+
+    install_result = runner.invoke(cli.app, ["skills", "install"])
+
+    assert install_result.exit_code == 0
+    payload = json.loads(install_result.output)
+    target_dir = codex_home / "skills"
+    assert payload["target_dir"] == str(target_dir)
+    assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
+
+
 def test_command_group_without_subcommand_shows_help() -> None:
     result = runner.invoke(cli.app, ["context"])
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 from typing import Annotated
@@ -14,6 +15,14 @@ skills_app = typer.Typer(
     no_args_is_help=True,
     help="Install or uninstall bundled ppx-* agent skills.",
 )
+
+def _default_codex_skills_dir() -> Path:
+    return Path(os.environ.get("CODEX_HOME", "~/.codex")) / "skills"
+
+
+def _resolve_target_dir(target_dir: Path | None) -> Path:
+    return (target_dir or _default_codex_skills_dir()).expanduser()
+
 
 
 def _bundled_skills_dir() -> Path:
@@ -49,18 +58,18 @@ def skills_list() -> None:
 )
 def skills_install(
     target_dir: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--target-dir",
-            help="Directory that should contain skill folders, e.g. ~/.pi/agent/skills.",
+            help="Directory that should contain skill folders. Defaults to ${CODEX_HOME:-~/.codex}/skills.",
         ),
-    ],
+    ] = None,
     force: Annotated[
         bool,
         typer.Option("--force", help="Overwrite existing ppx-* skill directories."),
     ] = False,
 ) -> None:
-    target_dir = target_dir.expanduser()
+    target_dir = _resolve_target_dir(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
     installed: list[str] = []
     skipped: list[str] = []
@@ -89,14 +98,14 @@ def skills_install(
 )
 def skills_uninstall(
     target_dir: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--target-dir",
-            help="Directory that contains installed skill folders, e.g. ~/.pi/agent/skills.",
+            help="Directory that contains installed skill folders. Defaults to ${CODEX_HOME:-~/.codex}/skills.",
         ),
-    ],
+    ] = None,
 ) -> None:
-    target_dir = target_dir.expanduser()
+    target_dir = _resolve_target_dir(target_dir)
     if not target_dir.exists():
         print_json({"target_dir": str(target_dir), "removed": [], "missing": []})
         return

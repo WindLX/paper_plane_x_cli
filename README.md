@@ -14,10 +14,33 @@ All commands call HTTP endpoints under `/api/v1` on a running Paper Plane X serv
 
 ## Install
 
-From the cli directory:
+The CLI uses [uv](https://docs.astral.sh/uv/) for installation and upgrades:
 
 ```bash
-uvx --from . ppx --help
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+For released versions, install from PyPI:
+
+```bash
+uv tool install paper-plane-x-cli
+```
+
+Upgrade:
+
+```bash
+uv tool upgrade paper-plane-x-cli
+```
+
+Uninstall the CLI:
+
+```bash
+uv tool uninstall paper-plane-x-cli
+```
+
+For local development, or before the package is published to PyPI, install from the CLI directory:
+
+```bash
 uv tool install .
 ```
 
@@ -105,13 +128,45 @@ Use `ppx-researcher` when an external agent should follow the same research work
 
 Use `ppx-pdf-to-markdown` when an external agent encounters local PDFs and should convert them to Markdown before reading, summarizing, extracting, or uploading the result.
 
-Install or uninstall all bundled `ppx-*` skills into an agent skill directory:
+For Codex, the default target is `${CODEX_HOME:-~/.codex}/skills`, which is Codex's default user skill directory:
 
 ```bash
 ppx skills list
+ppx skills install
+ppx skills install --force
+ppx skills uninstall
+```
+
+After installation, restart Codex or open a new session to make `ppx-researcher` and `ppx-pdf-to-markdown` available.
+
+You can also pass an explicit target directory for the agent you use:
+
+| Tool / scope | Install command | Notes |
+| --- | --- | --- |
+| Codex default | `ppx skills install` | Installs into `${CODEX_HOME:-~/.codex}/skills` |
+| Generic Agent Skills / compatibility path | `ppx skills install --target-dir ~/.agents/skills` | Useful for Codex/agent setups that already read from `~/.agents/skills` |
+| Pi agent | `ppx skills install --target-dir ~/.pi/agent/skills` | Uses the Pi agent skill directory |
+| Claude Code user scope | `ppx skills install --target-dir ~/.claude/skills` | Available to Claude Code sessions for the current user |
+| Claude Code project scope | `ppx skills install --target-dir ./.claude/skills` | Checked into a repository when the team should share the skills |
+
+```bash
+ppx skills install --target-dir ~/.agents/skills
 ppx skills install --target-dir ~/.pi/agent/skills
-ppx skills install --target-dir ~/.pi/agent/skills --force
-ppx skills uninstall --target-dir ~/.pi/agent/skills
+ppx skills install --target-dir ~/.claude/skills
+ppx skills install --target-dir ./.claude/skills
 ```
 
 `install` copies every bundled `ppx-*` skill into the target directory. Existing skill directories are skipped unless `--force` is passed. `uninstall` removes only the bundled `ppx-*` skill names, leaving unrelated skills in the target directory alone.
+
+To fully remove both the CLI and installed skills, uninstall skills first, then uninstall the CLI:
+
+```bash
+ppx skills uninstall
+uv tool uninstall paper-plane-x-cli
+```
+
+If you installed skills into a custom directory, pass the same directory when uninstalling:
+
+```bash
+ppx skills uninstall --target-dir ~/.agents/skills
+```

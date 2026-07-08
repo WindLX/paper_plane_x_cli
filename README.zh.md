@@ -14,10 +14,33 @@ Paper Plane X 的独立 HTTP CLI 与外部 Agent 技能集。
 
 ## 安装
 
-在 CLI 目录下执行：
+CLI 使用 [uv](https://docs.astral.sh/uv/) 安装和升级：
 
 ```bash
-uvx --from . ppx --help
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+发布版本推荐从 PyPI 安装：
+
+```bash
+uv tool install paper-plane-x-cli
+```
+
+升级：
+
+```bash
+uv tool upgrade paper-plane-x-cli
+```
+
+卸载 CLI：
+
+```bash
+uv tool uninstall paper-plane-x-cli
+```
+
+本地开发或还没有发布到 PyPI 时，可以在 CLI 目录下从源码安装：
+
+```bash
 uv tool install .
 ```
 
@@ -100,13 +123,45 @@ skills/ppx-pdf-to-markdown/SKILL.md
 
 当外部 Agent 遇到本地 PDF 需要先转换为 Markdown 再进行阅读、摘要、抽取或上传时，使用 `ppx-pdf-to-markdown`。
 
-安装或卸载所有自带的 `ppx-*` 技能到 Agent 技能目录：
+面向 Codex 时，默认会安装到 `${CODEX_HOME:-~/.codex}/skills`，这是 Codex 读取用户技能的默认目录：
 
 ```bash
 ppx skills list
+ppx skills install
+ppx skills install --force
+ppx skills uninstall
+```
+
+安装完成后，重启 Codex 或开启新会话即可看到 `ppx-researcher` 和 `ppx-pdf-to-markdown`。
+
+也可以按你使用的 Agent 显式指定目标目录：
+
+| 工具/场景 | 安装命令 | 说明 |
+| --- | --- | --- |
+| Codex 默认 | `ppx skills install` | 安装到 `${CODEX_HOME:-~/.codex}/skills` |
+| 通用 Agent Skills / 兼容目录 | `ppx skills install --target-dir ~/.agents/skills` | 适合已经从 `~/.agents/skills` 读取技能的 Codex/Agent 环境 |
+| Pi agent | `ppx skills install --target-dir ~/.pi/agent/skills` | 沿用 Pi agent 的技能目录 |
+| Claude Code 用户级 | `ppx skills install --target-dir ~/.claude/skills` | 对当前用户的 Claude Code 会话生效 |
+| Claude Code 项目级 | `ppx skills install --target-dir ./.claude/skills` | 随项目仓库分发；提交前请确认团队希望共享这些技能 |
+
+```bash
+ppx skills install --target-dir ~/.agents/skills
 ppx skills install --target-dir ~/.pi/agent/skills
-ppx skills install --target-dir ~/.pi/agent/skills --force
-ppx skills uninstall --target-dir ~/.pi/agent/skills
+ppx skills install --target-dir ~/.claude/skills
+ppx skills install --target-dir ./.claude/skills
 ```
 
 `install` 会将所有自带的 `ppx-*` 技能复制到目标目录；已存在的技能目录会被跳过，除非传入 `--force`。`uninstall` 仅删除自带的 `ppx-*` 技能名称，不会动目标目录中的其他技能。
+
+如果要彻底移除 CLI 与已安装技能，先卸载技能，再卸载 CLI：
+
+```bash
+ppx skills uninstall
+uv tool uninstall paper-plane-x-cli
+```
+
+使用自定义目录安装过技能时，卸载时传入同一个目录：
+
+```bash
+ppx skills uninstall --target-dir ~/.agents/skills
+```
