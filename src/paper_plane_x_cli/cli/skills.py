@@ -16,13 +16,13 @@ skills_app = typer.Typer(
     help="Install or uninstall bundled ppx-* agent skills.",
 )
 
+
 def _default_codex_skills_dir() -> Path:
     return Path(os.environ.get("CODEX_HOME", "~/.codex")) / "skills"
 
 
 def _resolve_target_dir(target_dir: Path | None) -> Path:
     return (target_dir or _default_codex_skills_dir()).expanduser()
-
 
 
 def _bundled_skills_dir() -> Path:
