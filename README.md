@@ -1,111 +1,181 @@
 # Paper Plane X CLI
 
+[![PyPI](https://img.shields.io/pypi/v/paper-plane-x-cli)](https://pypi.org/project/paper-plane-x-cli/)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB.svg)](pyproject.toml)
+[![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+
 English | [中文](README.zh.md)
 
-Standalone HTTP CLI and external-agent skills for Paper Plane X.
+`ppx` is the JSON-first command-line client and external-agent integration package for [Paper Plane X](https://github.com/WindLX/paper_plane_x). It provides stable HTTP commands for project discovery, literature search, paper comparison, PDF parsing, project-file editing, and durable paper notes.
 
-This package contains:
+The package also ships two Agent Skills:
 
-- `ppx`: a JSON-first CLI that talks to a running Paper Plane X FastAPI server.
-- `skills/ppx-researcher`: the Researcher skill for Codex, Claude Code, Pi agents, and other agent tools.
-- `skills/ppx-pdf-to-markdown`: a PDF-to-Markdown workflow skill backed by the Paper Plane X API.
+- `ppx-researcher`: evidence-driven literature research through a Paper Plane X project.
+- `ppx-pdf-to-markdown`: local PDF conversion through the configured Paper Plane X parser.
 
-All commands call HTTP endpoints under `/api/v1` on a running Paper Plane X server.
+Every remote command calls a running Paper Plane X Backend under `/api/v1`; the CLI never reads the backend database directly.
 
-## Install
+## Who should use it
 
-The CLI uses [uv](https://docs.astral.sh/uv/) for installation and upgrades:
+- Researchers who prefer terminal and scriptable workflows.
+- Automation that needs predictable JSON output and non-zero failure codes.
+- Codex, Claude Code, Pi agent, and other Agent Skills-compatible tools.
+- Developers integrating Paper Plane X into local research pipelines.
 
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+## Requirements
 
-For released versions, install from PyPI:
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/)
+- A running Paper Plane X Backend for remote commands
+- A project ID for project-scoped commands
+
+## Installation
+
+Install the released package from PyPI:
 
 ```bash
 uv tool install paper-plane-x-cli
+ppx --help
 ```
 
-Upgrade:
+Upgrade or uninstall:
 
 ```bash
 uv tool upgrade paper-plane-x-cli
-```
-
-Uninstall the CLI:
-
-```bash
 uv tool uninstall paper-plane-x-cli
 ```
 
-For local development, or before the package is published to PyPI, install from the CLI directory:
+Install the current source checkout for development:
 
 ```bash
 uv tool install .
 ```
 
-After `uv tool install`, use `ppx` directly.
+## Quick start
 
-## Context
-
-`ppx` resolves context in this order:
-
-1. command line options: `--base-url`, `--project-id`
-2. environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`
-3. local context file: `./.paper-plane-x/context.json` (in the current working directory)
-4. global context file: `~/.config/paper-plane-x/context.json`
-5. default base URL: `http://127.0.0.1:8000/api/v1`
-
-The local context overrides the global context. This allows per-project settings without changing your global defaults.
+Configure the backend and a default project:
 
 ```bash
-# Global context (default)
 ppx context set --base-url http://127.0.0.1:8000/api/v1
 ppx context set --project-id prj_x
-
-# Local context (current directory only)
-ppx context set --local --project-id prj_y
-
 ppx context show
 ```
 
-## Common Commands
+Explore and compare project papers:
 
 ```bash
 ppx project global-finder
-ppx librarian search --query-expr "(meta.title CONTAINS transformer)" --limit 20
-ppx librarian matrix --paper-ids p1,p2 --field-paths quick_scan,synthesis_data.methodology.innovation
-ppx librarian deep-dive --paper-id p1 --question "What is the core contribution?"
-
-ppx paper markdown --paper-id p1 --save-dir ./paper-markdown
-
-ppx files list --dir /
-ppx files read --path /notes/idea.md
-ppx files upload --source ./idea.md --path /notes/idea.md
-ppx files find --path /draft.md --query "Related Work"
-ppx files patch --path /draft.md --action insert_after --anchor-text "## Related Work" --content "..."
-
-ppx paper-note get --paper-id p1
-ppx paper-note write --paper-id p1 --content "..."
-ppx paper-note delete --paper-id p1
+ppx librarian search \
+  --query-expr "(meta.title CONTAINS transformer)" \
+  --limit 20
+ppx librarian matrix \
+  --paper-ids pap_a,pap_b \
+  --field-paths meta.title,quick_scan.quick_summary
+ppx librarian deep-dive \
+  --paper-id pap_a \
+  --question "What is the core contribution?"
 ```
 
-All tool commands print JSON to stdout. HTTP and validation failures print structured JSON to stderr and exit non-zero.
+Persist a result in the project workspace:
 
-`files upload` uses the same sandbox rules as project files: allowed text/data extensions only, no path traversal, and a 10MB per-file limit.
+```bash
+ppx files upload --source ./comparison.md --path /notes/comparison.md
+```
 
-`paper markdown` downloads the paper's stored parsed Markdown. The output filename
-defaults to `<paper-id>.md`; use `--output-md-name full-paper.md` to override it.
+## Context resolution
 
-## PDF Parsing
+`ppx` resolves configuration in this order:
 
-Use the PDF parser when an external agent needs to read or process a local PDF as Markdown:
+1. command-line options: `--base-url`, `--project-id`;
+2. environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`;
+3. local context: `./.paper-plane-x/context.json`;
+4. global context: `~/.config/paper-plane-x/context.json`;
+5. default base URL: `http://127.0.0.1:8000/api/v1`.
+
+Local context overrides global context, which is useful when each working directory maps to a different Paper Plane X project.
+
+```bash
+# Global defaults
+ppx context set --base-url http://127.0.0.1:8000/api/v1
+ppx context set --project-id prj_default
+
+# Current directory only
+ppx context set --local --project-id prj_current
+```
+
+For temporary or CI usage:
+
+```bash
+PPX_BASE_URL=http://127.0.0.1:8000/api/v1 \
+PPX_PROJECT_ID=prj_x \
+ppx project global-finder
+```
+
+Do not store secrets in context files. The CLI context contains server and project identifiers, not LLM API keys.
+
+## Command groups
+
+| Group            | Purpose                                                    |
+| ---------------- | ---------------------------------------------------------- |
+| `ppx context`    | Set and inspect global or local context                    |
+| `ppx project`    | Project-level discovery                                    |
+| `ppx librarian`  | Search, matrix comparison, and deep dive                   |
+| `ppx pdf`        | Convert a local PDF to Markdown and images                 |
+| `ppx paper`      | Download stored paper Markdown                             |
+| `ppx paper-note` | Read, write, or delete durable paper notes                 |
+| `ppx files`      | List, read, write, upload, patch, and delete project files |
+| `ppx skills`     | Install or remove bundled Agent Skills                     |
+
+Run `ppx <group> --help` for authoritative options.
+
+## Project files
+
+```bash
+ppx files list --dir /
+ppx files read --path /notes/idea.md
+ppx files lines --path /draft.md --start-line 1 --end-line 40
+ppx files find --path /draft.md --query "Related Work"
+ppx files write --path /notes/idea.md --content "# Idea"
+ppx files upload --source ./idea.md --path /notes/idea.md
+ppx files patch \
+  --path /draft.md \
+  --action insert_after \
+  --anchor-text "## Related Work" \
+  --content "..."
+ppx files delete --path /notes/obsolete.md
+```
+
+Project files are sandboxed by the backend: path traversal is rejected, only approved text/data extensions are accepted, and uploads are limited to 10 MB per file.
+
+Prefer targeted `find`, `lines`, `replace-*`, or `patch` operations when an Agent modifies an existing document. This reduces accidental overwrites and makes failures explicit.
+
+## Paper Markdown and notes
+
+Download the parsed Markdown stored for a paper:
+
+```bash
+ppx paper markdown --paper-id pap_x --save-dir ./paper-markdown
+```
+
+The default filename is `<paper-id>.md`; override it with `--output-md-name`.
+
+Maintain a durable paper note:
+
+```bash
+ppx paper-note get --paper-id pap_x
+ppx paper-note write --paper-id pap_x --content "Stable research note"
+ppx paper-note delete --paper-id pap_x
+```
+
+Use paper notes for stable conclusions about one paper. Use project files for cross-paper synthesis, matrices, plans, and drafts.
+
+## PDF to Markdown
 
 ```bash
 ppx pdf parse --source ./paper.pdf --save-dir ./paper-pdf
 ```
 
-The command sends the PDF to the Paper Plane X API, writes Markdown plus referenced images, and prints JSON:
+The command uploads the PDF to the configured backend parser, writes Markdown and referenced images, prunes unreferenced images, and prints a JSON summary:
 
 ```json
 {
@@ -115,61 +185,101 @@ The command sends the PDF to the Paper Plane X API, writes Markdown plus referen
 }
 ```
 
-## Skill
+Parser choice and credentials are managed by the backend Settings, not by the CLI.
 
-Bundled skills live under `skills/`:
+## Agent Skills
+
+Bundled skills:
 
 ```text
 skills/ppx-researcher/SKILL.md
 skills/ppx-pdf-to-markdown/SKILL.md
 ```
 
-Use `ppx-researcher` when an external agent should follow the same research workflow as Paper Plane X: verify project context, search and compare papers through `ppx`, write durable results into project files or paper notes, and cite only evidence actually fetched through the CLI/API.
-
-Use `ppx-pdf-to-markdown` when an external agent encounters local PDFs and should convert them to Markdown before reading, summarizing, extracting, or uploading the result.
-
-For Codex, the default target is `${CODEX_HOME:-~/.codex}/skills`, which is Codex's default user skill directory:
+List and install them:
 
 ```bash
 ppx skills list
 ppx skills install
-ppx skills install --force
-ppx skills uninstall
 ```
 
-After installation, restart Codex or open a new session to make `ppx-researcher` and `ppx-pdf-to-markdown` available.
+The default target is `${CODEX_HOME:-~/.codex}/skills`. Use an explicit target for other tools:
 
-You can also pass an explicit target directory for the agent you use:
+| Tool or scope                  | Command                                              |
+| ------------------------------ | ---------------------------------------------------- |
+| Codex default                  | `ppx skills install`                                 |
+| Generic Agent Skills directory | `ppx skills install --target-dir ~/.agents/skills`   |
+| Pi agent                       | `ppx skills install --target-dir ~/.pi/agent/skills` |
+| Claude Code user scope         | `ppx skills install --target-dir ~/.claude/skills`   |
+| Claude Code project scope      | `ppx skills install --target-dir ./.claude/skills`   |
 
-| Tool / scope | Install command | Notes |
-| --- | --- | --- |
-| Codex default | `ppx skills install` | Installs into `${CODEX_HOME:-~/.codex}/skills` |
-| Generic Agent Skills / compatibility path | `ppx skills install --target-dir ~/.agents/skills` | Useful for Codex/agent setups that already read from `~/.agents/skills` |
-| Pi agent | `ppx skills install --target-dir ~/.pi/agent/skills` | Uses the Pi agent skill directory |
-| Claude Code user scope | `ppx skills install --target-dir ~/.claude/skills` | Available to Claude Code sessions for the current user |
-| Claude Code project scope | `ppx skills install --target-dir ./.claude/skills` | Checked into a repository when the team should share the skills |
-
-```bash
-ppx skills install --target-dir ~/.agents/skills
-ppx skills install --target-dir ~/.pi/agent/skills
-ppx skills install --target-dir ~/.claude/skills
-ppx skills install --target-dir ./.claude/skills
-```
-
-`install` copies every bundled `ppx-*` skill into the target directory. Existing skill directories are skipped unless `--force` is passed. `uninstall` removes only the bundled `ppx-*` skill names, leaving unrelated skills in the target directory alone.
-
-To fully remove both the CLI and installed skills, uninstall skills first, then uninstall the CLI:
+Existing bundled skill directories are skipped unless `--force` is provided. `uninstall` removes only the bundled `ppx-*` skill names:
 
 ```bash
 ppx skills uninstall
-uv tool uninstall paper-plane-x-cli
-```
-
-If you installed skills into a custom directory, pass the same directory when uninstalling:
-
-```bash
 ppx skills uninstall --target-dir ~/.agents/skills
 ```
+
+Restart the Agent application or open a new session after installation.
+
+## Output and automation contract
+
+- Successful remote commands print JSON to stdout.
+- HTTP, context, and validation failures print structured JSON to stderr.
+- Failures return a non-zero exit code.
+- Download commands write files only to the requested local directory.
+- The CLI does not log or persist backend LLM credentials.
+
+Scripts should parse JSON rather than human-readable terminal formatting.
+
+## Development
+
+```bash
+git clone https://github.com/WindLX/paper_plane_x_cli.git
+cd paper_plane_x_cli
+uv sync
+uv run ppx --help
+```
+
+Quality checks:
+
+```bash
+just lint
+just format-check
+just typecheck
+just test
+just build
+just pre-commit
+```
+
+Equivalent uv commands:
+
+```bash
+uv run ruff check src tests
+uv run ruff format --check src tests
+uv run pyright
+uv run pytest
+uv build
+```
+
+## Contributing and pull requests
+
+1. Create a focused branch from the latest `main`.
+2. Preserve JSON output compatibility unless the change explicitly introduces a breaking contract.
+3. Add tests for command parsing, context precedence, request payloads, and file output.
+4. Update both `README.md` and `README.zh.md` for user-visible changes.
+5. Update bundled Skill instructions when the workflow or CLI contract changes.
+6. Run `just pre-commit` before opening a PR.
+
+PR descriptions should include motivation, affected commands, compatibility impact, and verification commands. Never include API keys, private paper content, or local context files in issues or test fixtures.
+
+Report problems at [GitHub Issues](https://github.com/WindLX/paper_plane_x_cli/issues).
+
+## Release
+
+The CLI version is managed by the Paper Plane X monorepo `VERSION` file. A top-level `vX.Y.Z` release builds the wheel and source distribution and publishes them to PyPI through GitHub Actions Trusted Publishing.
+
+Do not bump the CLI version independently; use the monorepo release process.
 
 ## License
 
