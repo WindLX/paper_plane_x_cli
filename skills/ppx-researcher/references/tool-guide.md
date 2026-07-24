@@ -18,17 +18,20 @@
 
 ```bash
 ppx context set --base-url http://127.0.0.1:8000/api/v1 --project-id prj_x
-ppx context set --local --project-id prj_y
+ppx context set --global --project-id prj_shared
+ppx context set --project-id null
 ppx context show
 ```
 
 Context precedence:
 
 1. Command flags: `--base-url`, `--project-id`
-2. Environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`
+2. Environment variables: `PPX_<CONFIG_KEY>`, such as `PPX_BASE_URL` and `PPX_PROJECT_ID`
 3. Local context: `./.paper-plane-x/context.json`
 4. Global context: `~/.config/paper-plane-x/context.json`
 5. Default base URL: `http://127.0.0.1:8000/api/v1`
+
+Context writes are local by default; use `--global` for shared defaults. For context sources, precedence is `ENV > local JSON > global JSON`. The `project_id` values `none`, `null`, `None`, and `NULL` clear the target key with `context set`; as a command option or environment value, they explicitly disable the resolved project.
 
 Run `ppx context show` before project-scoped work. Most project file and librarian commands require `project_id`.
 

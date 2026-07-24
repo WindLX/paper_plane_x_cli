@@ -87,21 +87,27 @@ ppx files upload --source ./comparison.md --path /notes/comparison.md
 `ppx` 按以下优先级解析配置：
 
 1. 命令行选项：`--base-url`、`--project-id`；
-2. 环境变量：`PPX_BASE_URL`、`PPX_PROJECT_ID`；
+2. 名为 `PPX_<CONFIG_KEY>` 的环境变量，例如 `PPX_BASE_URL`、`PPX_PROJECT_ID`；
 3. 本地上下文：`./.paper-plane-x/context.json`；
 4. 全局上下文：`~/.config/paper-plane-x/context.json`；
 5. 默认后端地址：`http://127.0.0.1:8000/api/v1`。
 
-本地上下文覆盖全局上下文，适合让不同工作目录分别关联不同的 Paper Plane X 项目。
+各 context 来源的优先级为 `ENV > local JSON > global JSON`。默认写入本地 context，适合让不同工作目录分别关联不同的 Paper Plane X 项目；仅在保存共享默认值时使用 `--global`。
 
 ```bash
-# 全局默认值
+# 当前目录（默认）
 ppx context set --base-url http://127.0.0.1:8000/api/v1
-ppx context set --project-id prj_default
+ppx context set --project-id prj_current
 
-# 仅当前目录
-ppx context set --local --project-id prj_current
+# 全局默认值
+ppx context set --global --base-url http://127.0.0.1:8000/api/v1
+ppx context set --global --project-id prj_default
+
+# 清除本地 context 中的 project_id
+ppx context set --project-id null
 ```
+
+`project_id` 会将 `none`、`null`、`None`、`NULL` 视为显式空值。用于 `context set` 时，它们会清除目标 JSON 文件中的该配置；用于顶层 `--project-id` 或 `PPX_PROJECT_ID` 时，它们会在本次调用中禁用已解析的项目。
 
 临时命令或 CI 可使用环境变量：
 

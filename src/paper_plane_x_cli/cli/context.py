@@ -10,6 +10,7 @@ from paper_plane_x_cli.cli.utils import (
     GLOBAL_CONTEXT_PATH,
     LOCAL_CONTEXT_PATH,
     load_context,
+    normalize_project_id,
     print_json,
     save_context,
 )
@@ -38,7 +39,7 @@ def context_show(ctx: typer.Context) -> None:
 
 @context_app.command(
     "set",
-    help=f"Save context to {GLOBAL_CONTEXT_PATH} (default) or {LOCAL_CONTEXT_PATH} (--local).",
+    help=f"Save context to {LOCAL_CONTEXT_PATH} (default) or {GLOBAL_CONTEXT_PATH} (--global).",
 )
 def context_set(
     set_base_url: Annotated[
@@ -51,22 +52,27 @@ def context_set(
     set_project_id: Annotated[
         str | None,
         typer.Option(
-            "--project-id", help="Project ID to save for project-scoped commands."
+            "--project-id",
+            help="Project ID to save; none/null saves an explicit null value.",
         ),
     ] = None,
-    local: Annotated[
+    global_context: Annotated[
         bool,
         typer.Option(
-            "--local",
-            help="Write to the local context file in the current directory instead of the global one.",
+            "--global",
+            help="Write to the global context file instead of the local file in the current directory.",
         ),
     ] = False,
 ) -> None:
-    path = LOCAL_CONTEXT_PATH if local else GLOBAL_CONTEXT_PATH
+    path = GLOBAL_CONTEXT_PATH if global_context else LOCAL_CONTEXT_PATH
     data = load_context(path)
     if set_base_url is not None:
         data["base_url"] = set_base_url.rstrip("/")
     if set_project_id is not None:
-        data["project_id"] = set_project_id
+        normalized_project_id = normalize_project_id(set_project_id)
+        if normalized_project_id is None:
+            data.pop("project_id", None)
+        else:
+            data["project_id"] = normalized_project_id
     save_context(data, path)
     print_json(data)

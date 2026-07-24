@@ -6,6 +6,7 @@ import httpx
 from typer.testing import CliRunner
 
 from paper_plane_x_cli import cli
+from paper_plane_x_cli.cli import context as context_commands
 
 runner = CliRunner()
 
@@ -52,6 +53,110 @@ def test_context_precedence_args_env_file(
         "base_url": "http://arg/api/v1",
         "project_id": "arg-project",
     }
+
+
+def test_context_precedence_env_local_global(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    global_context_path, local_context_path = set_context_paths(monkeypatch, tmp_path)
+    global_context_path.parent.mkdir(parents=True)
+    global_context_path.write_text(
+        json.dumps(
+            {
+                "base_url": "http://global/api/v1",
+                "project_id": "global-project",
+                "custom_key": "global-value",
+            }
+        ),
+        encoding="utf-8",
+    )
+    local_context_path.parent.mkdir(parents=True)
+    local_context_path.write_text(
+        json.dumps(
+            {
+                "project_id": "local-project",
+                "custom_key": "local-value",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PPX_PROJECT_ID", "env-project")
+    monkeypatch.setenv("PPX_CUSTOM_KEY", "env-value")
+
+    assert cli.resolve_context() == {
+        "base_url": "http://global/api/v1",
+        "project_id": "env-project",
+        "custom_key": "env-value",
+    }
+
+
+def test_explicit_null_project_id_blocks_lower_priority_values(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    global_context_path, local_context_path = set_context_paths(monkeypatch, tmp_path)
+    global_context_path.parent.mkdir(parents=True)
+    global_context_path.write_text(
+        json.dumps({"project_id": "global-project"}),
+        encoding="utf-8",
+    )
+    local_context_path.parent.mkdir(parents=True)
+    local_context_path.write_text(
+        json.dumps({"project_id": None}),
+        encoding="utf-8",
+    )
+
+    assert cli.resolve_context()["project_id"] is None
+
+    for null_value in ("none", "null", "None", "NULL"):
+        monkeypatch.setenv("PPX_PROJECT_ID", null_value)
+        assert cli.resolve_context()["project_id"] is None
+        assert cli.resolve_context(project_id=null_value)["project_id"] is None
+
+
+def test_context_set_defaults_to_local_and_global_is_explicit(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    global_context_path, local_context_path = set_context_paths(monkeypatch, tmp_path)
+    monkeypatch.setattr(context_commands, "GLOBAL_CONTEXT_PATH", global_context_path)
+    monkeypatch.setattr(context_commands, "LOCAL_CONTEXT_PATH", local_context_path)
+
+    local_result = runner.invoke(
+        cli.app,
+        ["context", "set", "--project-id", "local-project"],
+    )
+    global_result = runner.invoke(
+        cli.app,
+        ["context", "set", "--global", "--project-id", "global-project"],
+    )
+
+    assert local_result.exit_code == 0
+    assert global_result.exit_code == 0
+    assert json.loads(local_context_path.read_text())["project_id"] == "local-project"
+    assert json.loads(global_context_path.read_text())["project_id"] == "global-project"
+
+
+def test_context_set_clears_project_id_with_explicit_null(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    _, local_context_path = set_context_paths(monkeypatch, tmp_path)
+    monkeypatch.setattr(context_commands, "LOCAL_CONTEXT_PATH", local_context_path)
+    local_context_path.parent.mkdir(parents=True)
+    local_context_path.write_text(
+        json.dumps({"project_id": "local-project"}),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        cli.app,
+        ["context", "set", "--project-id", "NULL"],
+    )
+
+    assert result.exit_code == 0
+    assert "project_id" not in json.loads(local_context_path.read_text())
 
 
 def test_cli_help_exits_successfully() -> None:

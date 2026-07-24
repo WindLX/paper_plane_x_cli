@@ -17,13 +17,13 @@ For any project-scoped task, run:
 ppx context show
 ```
 
-If no `project_id` is available from flags, environment, local context, or global context, ask the user for it. Do not invent a `project_id`. After the user provides one, either set local context:
+If no `project_id` is available from flags, environment, local context, or global context, ask the user for it. Do not invent a `project_id`. After the user provides one, either set the default local context:
 
 ```bash
-ppx context set --local --project-id <project_id>
+ppx context set --project-id <project_id>
 ```
 
-or pass `--project-id <project_id>` on subsequent commands.
+or pass `--project-id <project_id>` on subsequent commands. Use `ppx context set --global ...` only when the user explicitly wants a shared global default. Environment variables override local JSON, and local JSON overrides global JSON. The values `none`, `null`, `None`, and `NULL` clear a saved `project_id` with `context set`, or explicitly disable it when supplied as a command option or environment value.
 
 Read `references/tool-guide.md` when you need exact CLI syntax, query rules, file editing commands, matrix field paths, or examples.
 

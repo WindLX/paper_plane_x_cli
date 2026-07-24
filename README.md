@@ -87,21 +87,27 @@ ppx files upload --source ./comparison.md --path /notes/comparison.md
 `ppx` resolves configuration in this order:
 
 1. command-line options: `--base-url`, `--project-id`;
-2. environment variables: `PPX_BASE_URL`, `PPX_PROJECT_ID`;
+2. environment variables named `PPX_<CONFIG_KEY>`, for example `PPX_BASE_URL` and `PPX_PROJECT_ID`;
 3. local context: `./.paper-plane-x/context.json`;
 4. global context: `~/.config/paper-plane-x/context.json`;
 5. default base URL: `http://127.0.0.1:8000/api/v1`.
 
-Local context overrides global context, which is useful when each working directory maps to a different Paper Plane X project.
+For context sources, the precedence is `ENV > local JSON > global JSON`. Local context is enabled by default, which is useful when each working directory maps to a different Paper Plane X project. Use `--global` only when saving shared defaults.
 
 ```bash
-# Global defaults
+# Current directory (default)
 ppx context set --base-url http://127.0.0.1:8000/api/v1
-ppx context set --project-id prj_default
+ppx context set --project-id prj_current
 
-# Current directory only
-ppx context set --local --project-id prj_current
+# Global defaults
+ppx context set --global --base-url http://127.0.0.1:8000/api/v1
+ppx context set --global --project-id prj_default
+
+# Clear project_id from the local context
+ppx context set --project-id null
 ```
+
+`project_id` treats `none`, `null`, `None`, and `NULL` as explicit null values. With `context set`, they clear the key from the target JSON file; with the top-level `--project-id` option or `PPX_PROJECT_ID`, they disable the resolved project for that invocation.
 
 For temporary or CI usage:
 

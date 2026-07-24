@@ -17,7 +17,7 @@ from paper_plane_x_cli.cli.paper_note import paper_note_app
 from paper_plane_x_cli.cli.pdf import pdf_app
 from paper_plane_x_cli.cli.project import project_app
 from paper_plane_x_cli.cli.skills import skills_app
-from paper_plane_x_cli.cli.utils import DEFAULT_BASE_URL, load_context
+from paper_plane_x_cli.cli.utils import resolve_context as _resolve_context
 
 GLOBAL_CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 GLOBAL_CONTEXT_PATH = GLOBAL_CONTEXT_DIR / "paper-plane-x" / "context.json"
@@ -28,22 +28,12 @@ def resolve_context(
     base_url: str | None = None,
     project_id: str | None = None,
 ) -> dict[str, str | None]:
-    global_ctx = load_context(GLOBAL_CONTEXT_PATH)
-    local_ctx = load_context(LOCAL_CONTEXT_PATH)
-    merged = {**global_ctx, **local_ctx}
-    resolved_base_url = (
-        base_url
-        or os.environ.get("PPX_BASE_URL")
-        or merged.get("base_url")
-        or DEFAULT_BASE_URL
+    return _resolve_context(
+        base_url=base_url,
+        project_id=project_id,
+        global_context_path=GLOBAL_CONTEXT_PATH,
+        local_context_path=LOCAL_CONTEXT_PATH,
     )
-    resolved_project_id = (
-        project_id or os.environ.get("PPX_PROJECT_ID") or merged.get("project_id")
-    )
-    return {
-        "base_url": resolved_base_url.rstrip("/"),
-        "project_id": resolved_project_id,
-    }
 
 
 app = typer.Typer(
@@ -68,7 +58,10 @@ def callback(
     ] = None,
     project_id: Annotated[
         str | None,
-        typer.Option("--project-id", help="Override current Paper Plane X project ID."),
+        typer.Option(
+            "--project-id",
+            help="Override current project ID; none/null explicitly disables it.",
+        ),
     ] = None,
 ) -> None:
     ctx.ensure_object(dict)

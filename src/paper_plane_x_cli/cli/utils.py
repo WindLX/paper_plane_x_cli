@@ -16,6 +16,8 @@ GLOBAL_CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".conf
 GLOBAL_CONTEXT_PATH = GLOBAL_CONTEXT_DIR / "paper-plane-x" / "context.json"
 LOCAL_CONTEXT_PATH = Path.cwd() / ".paper-plane-x" / "context.json"
 QueryParamValue = str | int | bool
+ContextValue = str | None
+NULL_PROJECT_IDS = {"none", "null"}
 
 
 def fail(message: str, *, status_code: int = 2) -> NoReturn:
@@ -23,7 +25,7 @@ def fail(message: str, *, status_code: int = 2) -> NoReturn:
     raise typer.Exit(status_code)
 
 
-def load_context(path: Path) -> dict[str, str]:
+def load_context(path: Path) -> dict[str, ContextValue]:
     if not path.exists():
         return {}
     try:
@@ -33,10 +35,10 @@ def load_context(path: Path) -> dict[str, str]:
     if not isinstance(data_obj, dict):
         fail(f"Invalid context file shape: {path}")
     data = cast(dict[str, object], data_obj)
-    return {key: str(value) for key, value in data.items() if value is not None}
+    return {key: None if value is None else str(value) for key, value in data.items()}
 
 
-def save_context(data: dict[str, str], path: Path) -> None:
+def save_context(data: dict[str, ContextValue], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -46,23 +48,34 @@ def save_context(data: dict[str, str], path: Path) -> None:
 def resolve_context(
     base_url: str | None = None,
     project_id: str | None = None,
+    *,
+    global_context_path: Path | None = None,
+    local_context_path: Path | None = None,
 ) -> dict[str, str | None]:
-    global_ctx = load_context(GLOBAL_CONTEXT_PATH)
-    local_ctx = load_context(LOCAL_CONTEXT_PATH)
-    merged = {**global_ctx, **local_ctx}
-    resolved_base_url = (
-        base_url
-        or os.environ.get("PPX_BASE_URL")
-        or merged.get("base_url")
-        or DEFAULT_BASE_URL
-    )
-    resolved_project_id = (
-        project_id or os.environ.get("PPX_PROJECT_ID") or merged.get("project_id")
-    )
-    return {
-        "base_url": resolved_base_url.rstrip("/"),
-        "project_id": resolved_project_id,
-    }
+    resolved = load_context(global_context_path or GLOBAL_CONTEXT_PATH)
+    resolved.update(load_context(local_context_path or LOCAL_CONTEXT_PATH))
+
+    context_keys = set(resolved) | {"base_url", "project_id"}
+    for key in context_keys:
+        env_name = f"PPX_{key.upper()}"
+        if env_name in os.environ:
+            resolved[key] = os.environ[env_name]
+
+    if base_url is not None:
+        resolved["base_url"] = base_url
+    if project_id is not None:
+        resolved["project_id"] = project_id
+
+    resolved_base_url = resolved.get("base_url") or DEFAULT_BASE_URL
+    resolved["base_url"] = resolved_base_url.rstrip("/")
+    resolved["project_id"] = normalize_project_id(resolved.get("project_id"))
+    return resolved
+
+
+def normalize_project_id(project_id: ContextValue) -> ContextValue:
+    if project_id is None or project_id.lower() in NULL_PROJECT_IDS:
+        return None
+    return project_id
 
 
 def print_json(payload: object, *, stream: Any | None = None) -> None:
