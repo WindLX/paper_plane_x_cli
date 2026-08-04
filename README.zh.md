@@ -127,7 +127,7 @@ ppx project global-finder
 | `ppx project`    | 项目级发现                                     |
 | `ppx librarian`  | 检索、矩阵对比和单篇深度分析                   |
 | `ppx pdf`        | 将本地 PDF 转换为 Markdown 和图片              |
-| `ppx paper`      | 下载已保存的论文 Markdown                      |
+| `ppx paper`      | 下载已保存的论文 Markdown 或原始 PDF           |
 | `ppx paper-note` | 读取、写入或删除持久化论文备注                 |
 | `ppx files`      | 列出、读取、写入、上传、局部修改和删除项目文件 |
 | `ppx skills`     | 安装或移除随包提供的 Agent Skills              |
@@ -155,7 +155,7 @@ ppx files delete --path /notes/obsolete.md
 
 Agent 修改已有文档时，优先使用 `find`、`lines`、`replace-*` 或 `patch` 进行局部变更，以减少意外覆盖并获得明确的失败结果。
 
-## 论文 Markdown 与备注
+## 论文资源与备注
 
 下载某篇论文已解析并保存的 Markdown：
 
@@ -164,6 +164,15 @@ ppx paper markdown --paper-id pap_x --save-dir ./paper-markdown
 ```
 
 默认文件名为 `<paper-id>.md`，可通过 `--output-md-name` 修改。
+
+下载论文上传时保存的原始 PDF：
+
+```bash
+ppx paper pdf --paper-id pap_x --save-dir ./paper-pdf
+ppx paper pdf --paper-id pap_x --save-dir ./paper-pdf --output-pdf-name source.pdf
+```
+
+默认文件名为 `<paper-id>.pdf`，可通过 `--output-pdf-name` 修改。
 
 维护持久化论文备注：
 

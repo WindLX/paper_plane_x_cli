@@ -67,6 +67,8 @@ Use `ppx paper markdown --paper-id <paper_id> --save-dir <directory>` when the u
 
 Full paper Markdown is usually long. When sub-agent or delegation tools are available, prefer assigning focused sections or questions to sub-agents and synthesize their evidence-backed findings. Otherwise, inspect the file in targeted chunks instead of loading the whole document into context at once.
 
+Use `ppx paper pdf --paper-id <paper_id> --save-dir <directory>` when the task depends on the original page layout, figures, tables, formulas, or source-file verification. Prefer Markdown for text retrieval and the original PDF for visual evidence; downloading the PDF does not reprocess the paper.
+
 ### Project Files and Drafts
 
 Before writing or continuing drafts, inspect existing files with `ppx files list`, `read`, `lines`, or `find`. Use line, anchor, or exact-text edits when possible. Use `write` only for new files or intentional full regeneration.

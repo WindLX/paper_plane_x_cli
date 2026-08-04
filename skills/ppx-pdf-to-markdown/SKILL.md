@@ -13,10 +13,16 @@ If the source is already a Paper Plane X paper with a `paper_id`, download its s
 ppx paper markdown --paper-id <paper_id> --save-dir ./paper-markdown
 ```
 
+When the task requires the original layout, figures, tables, formulas, or a local PDF copy, download the preserved source file instead:
+
+```bash
+ppx paper pdf --paper-id <paper_id> --save-dir ./paper-pdf
+```
+
 ## Workflow
 
 1. Determine whether the source is an existing Paper Plane X `paper_id` or a local `.pdf`.
-2. For an existing paper, run `ppx paper markdown`, read the returned `md_path`, and stop. This download contains Markdown only, without extracted images.
+2. For an existing paper, use `ppx paper markdown` for textual reading or `ppx paper pdf` for visual/layout verification. Do not re-upload and parse it.
 3. For a local PDF, convert it:
 
 ```bash

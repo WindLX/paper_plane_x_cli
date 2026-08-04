@@ -82,7 +82,15 @@ ppx paper markdown --paper-id p1 --save-dir ./paper-markdown
 
 The default output path is `./paper-markdown/p1.md`. Use `--output-md-name full-paper.md` to choose another `.md` filename. The command prints `paper_id`, `md_path`, and `bytes_written`.
 
-Use this command when full-text reading or local processing needs the complete Markdown. It does not include the paper's extracted images or original PDF.
+Download the preserved original PDF when layout or visual evidence matters:
+
+```bash
+ppx paper pdf --paper-id p1 --save-dir ./paper-pdf
+```
+
+The default output path is `./paper-pdf/p1.pdf`. Use `--output-pdf-name source.pdf` for another `.pdf` filename. The command prints `paper_id`, `pdf_path`, and `bytes_written`.
+
+Use Markdown for full-text reading and local text processing. Use the original PDF for page layout, figures, tables, formulas, or source-file verification.
 
 Because full paper files are usually long, prefer delegating focused sections or questions to sub-agents when that capability is available. Otherwise, read the Markdown in targeted chunks rather than loading the entire file at once.
 

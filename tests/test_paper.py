@@ -10,6 +10,17 @@ from paper_plane_x_cli import cli
 runner = CliRunner()
 
 
+class FakeStream:
+    def __init__(self, response: httpx.Response) -> None:
+        self.response = response
+
+    def __enter__(self) -> httpx.Response:
+        return self.response
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+
 def test_paper_markdown_downloads_to_default_filename(
     tmp_path: Path,
     monkeypatch,
@@ -137,4 +148,128 @@ def test_paper_markdown_rejects_path_as_output_filename(tmp_path: Path) -> None:
 
     assert result.exit_code == 2
     assert "single .md filename" in result.output
+    assert not save_dir.exists()
+
+
+def test_paper_pdf_streams_to_default_filename(tmp_path: Path, monkeypatch) -> None:
+    captured: dict[str, Any] = {}
+    pdf = b"%PDF-1.7\noriginal\n%%EOF"
+
+    def fake_stream(method: str, url: str, **kwargs: Any) -> FakeStream:
+        captured.update({"method": method, "url": url, **kwargs})
+        return FakeStream(
+            httpx.Response(
+                200,
+                content=pdf,
+                request=httpx.Request(method, url),
+            )
+        )
+
+    monkeypatch.setattr(cli.httpx, "stream", fake_stream)
+    save_dir = tmp_path / "exports" / "papers"
+
+    result = runner.invoke(
+        cli.app,
+        [
+            "--base-url",
+            "http://server/api/v1",
+            "paper",
+            "pdf",
+            "--paper-id",
+            "pap-1",
+            "--save-dir",
+            str(save_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["method"] == "GET"
+    assert captured["url"] == "http://server/api/v1/papers/pap-1/pdf?download=true"
+    assert (save_dir / "pap-1.pdf").read_bytes() == pdf
+    assert not list(save_dir.glob("*.part"))
+    assert json.loads(result.output) == {
+        "paper_id": "pap-1",
+        "pdf_path": str(save_dir / "pap-1.pdf"),
+        "bytes_written": len(pdf),
+    }
+
+
+def test_paper_pdf_supports_custom_filename(tmp_path: Path, monkeypatch) -> None:
+    def fake_stream(method: str, url: str, **kwargs: Any) -> FakeStream:
+        return FakeStream(
+            httpx.Response(
+                200,
+                content=b"%PDF-custom",
+                request=httpx.Request(method, url),
+            )
+        )
+
+    monkeypatch.setattr(cli.httpx, "stream", fake_stream)
+    save_dir = tmp_path / "exports"
+    result = runner.invoke(
+        cli.app,
+        [
+            "paper",
+            "pdf",
+            "--paper-id",
+            "pap-2",
+            "--save-dir",
+            str(save_dir),
+            "--output-pdf-name",
+            "source-paper.pdf",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (save_dir / "source-paper.pdf").read_bytes() == b"%PDF-custom"
+
+
+def test_paper_pdf_http_error_cleans_partial_file(tmp_path: Path, monkeypatch) -> None:
+    def fake_stream(method: str, url: str, **kwargs: Any) -> FakeStream:
+        return FakeStream(
+            httpx.Response(
+                409,
+                json={"detail": "Paper pap-empty has no original PDF file"},
+                request=httpx.Request(method, url),
+            )
+        )
+
+    monkeypatch.setattr(cli.httpx, "stream", fake_stream)
+    save_dir = tmp_path / "exports"
+    result = runner.invoke(
+        cli.app,
+        [
+            "paper",
+            "pdf",
+            "--paper-id",
+            "pap-empty",
+            "--save-dir",
+            str(save_dir),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "no original PDF file" in result.output
+    assert not (save_dir / "pap-empty.pdf").exists()
+    assert not list(save_dir.glob("*.part"))
+
+
+def test_paper_pdf_rejects_path_as_output_filename(tmp_path: Path) -> None:
+    save_dir = tmp_path / "exports"
+    result = runner.invoke(
+        cli.app,
+        [
+            "paper",
+            "pdf",
+            "--paper-id",
+            "pap-3",
+            "--save-dir",
+            str(save_dir),
+            "--output-pdf-name",
+            "../escape.pdf",
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "single .pdf filename" in result.output
     assert not save_dir.exists()

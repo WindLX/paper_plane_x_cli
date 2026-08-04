@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import uuid
 from pathlib import Path
 from typing import Any, NoReturn, cast
 
@@ -137,6 +138,45 @@ def request_bytes(
     return response.content
 
 
+def download_file(
+    path: str,
+    ctx: dict[str, str | None],
+    destination: Path,
+    *,
+    timeout: float = 60.0,
+) -> int:
+    """Stream a response to a temporary file, then atomically publish it."""
+    base_url = ctx["base_url"]
+    url = f"{base_url}{path}"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = destination.with_name(f".{destination.name}.{uuid.uuid4().hex}.part")
+    bytes_written = 0
+
+    try:
+        with httpx.stream("GET", url, timeout=timeout) as response:
+            if response.status_code >= 400:
+                response.read()
+                _fail_response(response)
+            with temp_path.open("wb") as output:
+                for chunk in response.iter_bytes():
+                    output.write(chunk)
+                    bytes_written += len(chunk)
+        temp_path.replace(destination)
+    except httpx.TimeoutException:
+        fail(
+            f"HTTP request timed out after {timeout:g}s. "
+            "The backend may still be processing the request.",
+            status_code=1,
+        )
+    except httpx.HTTPError as exc:
+        fail(f"HTTP request failed: {exc}", status_code=1)
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
+
+    return bytes_written
+
+
 def _request_response(
     method: str,
     path: str,
@@ -176,16 +216,20 @@ def _request_response(
         fail(f"HTTP request failed: {exc}", status_code=1)
 
     if response.status_code >= 400:
-        try:
-            detail = response.json()
-        except json.JSONDecodeError:
-            detail = response.text
-        fail(
-            json.dumps(
-                {"status_code": response.status_code, "error": detail},
-                ensure_ascii=False,
-            ),
-            status_code=1,
-        )
+        _fail_response(response)
 
     return response
+
+
+def _fail_response(response: httpx.Response) -> NoReturn:
+    try:
+        detail = response.json()
+    except json.JSONDecodeError:
+        detail = response.text
+    fail(
+        json.dumps(
+            {"status_code": response.status_code, "error": detail},
+            ensure_ascii=False,
+        ),
+        status_code=1,
+    )

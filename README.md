@@ -127,7 +127,7 @@ Do not store secrets in context files. The CLI context contains server and proje
 | `ppx project`    | Project-level discovery                                    |
 | `ppx librarian`  | Search, matrix comparison, and deep dive                   |
 | `ppx pdf`        | Convert a local PDF to Markdown and images                 |
-| `ppx paper`      | Download stored paper Markdown                             |
+| `ppx paper`      | Download stored paper Markdown or the original PDF         |
 | `ppx paper-note` | Read, write, or delete durable paper notes                 |
 | `ppx files`      | List, read, write, upload, patch, and delete project files |
 | `ppx skills`     | Install or remove bundled Agent Skills                     |
@@ -155,7 +155,7 @@ Project files are sandboxed by the backend: path traversal is rejected, only app
 
 Prefer targeted `find`, `lines`, `replace-*`, or `patch` operations when an Agent modifies an existing document. This reduces accidental overwrites and makes failures explicit.
 
-## Paper Markdown and notes
+## Paper resources and notes
 
 Download the parsed Markdown stored for a paper:
 
@@ -164,6 +164,15 @@ ppx paper markdown --paper-id pap_x --save-dir ./paper-markdown
 ```
 
 The default filename is `<paper-id>.md`; override it with `--output-md-name`.
+
+Download the original PDF while preserving its uploaded bytes:
+
+```bash
+ppx paper pdf --paper-id pap_x --save-dir ./paper-pdf
+ppx paper pdf --paper-id pap_x --save-dir ./paper-pdf --output-pdf-name source.pdf
+```
+
+The default filename is `<paper-id>.pdf`; override it with `--output-pdf-name`.
 
 Maintain a durable paper note:
 

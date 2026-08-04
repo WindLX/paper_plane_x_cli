@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from paper_plane_x_cli.cli.utils import fail, print_json, request_bytes
+from paper_plane_x_cli.cli.utils import download_file, fail, print_json, request_bytes
 
 paper_app = typer.Typer(
     no_args_is_help=True,
@@ -54,5 +54,45 @@ def paper_markdown(
             "paper_id": paper_id,
             "md_path": str(md_path),
             "bytes_written": len(content),
+        }
+    )
+
+
+@paper_app.command("pdf", help="Download a paper's original PDF file.")
+def paper_pdf(
+    ctx: typer.Context,
+    paper_id: Annotated[str, typer.Option("--paper-id", help="Paper ID.")],
+    save_dir: Annotated[
+        Path,
+        typer.Option(
+            "--save-dir",
+            help="Directory where the PDF file is written.",
+        ),
+    ],
+    output_pdf_name: Annotated[
+        str | None,
+        typer.Option(
+            "--output-pdf-name",
+            help="PDF filename. Defaults to <paper-id>.pdf.",
+        ),
+    ] = None,
+) -> None:
+    pdf_name = output_pdf_name or f"{paper_id}.pdf"
+    name_path = Path(pdf_name)
+    if name_path.name != pdf_name or name_path.suffix.lower() != ".pdf":
+        fail("--output-pdf-name must be a single .pdf filename")
+
+    pdf_path = save_dir / pdf_name
+    bytes_written = download_file(
+        f"/papers/{paper_id}/pdf?download=true",
+        ctx.obj["ctx"],
+        pdf_path,
+    )
+
+    print_json(
+        {
+            "paper_id": paper_id,
+            "pdf_path": str(pdf_path),
+            "bytes_written": bytes_written,
         }
     )
