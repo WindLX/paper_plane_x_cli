@@ -11,6 +11,8 @@ Paper Plane X access is through the `ppx` CLI only. Do not call imagined same-na
 
 ## Start Here
 
+If user **wants to work in a project**, check for a `project_id` in the following order:
+
 For any project-scoped task, run:
 
 ```bash
@@ -24,6 +26,10 @@ ppx context set --project-id <project_id>
 ```
 
 or pass `--project-id <project_id>` on subsequent commands. Use `ppx context set --global ...` only when the user explicitly wants a shared global default. Environment variables override local JSON, and local JSON overrides global JSON. The values `none`, `null`, `None`, and `NULL` clear a saved `project_id` with `context set`, or explicitly disable it when supplied as a command option or environment value.
+
+Else if the user **just wants to work with a single paper**, `project_id` is not required. You do not need to set a project context for single-paper tasks, but you may still use `ppx context show` to confirm the current project context.
+
+`project-id` is needed in `project` and `files` commands, and in `librarian search` commands it is optional but recommended for project-scoped searches. It is not needed in other commands.
 
 Read `references/tool-guide.md` when you need exact CLI syntax, query rules, file editing commands, matrix field paths, or examples.
 
