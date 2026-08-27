@@ -131,6 +131,7 @@ Do not store secrets in context files. The CLI context contains server and proje
 | `ppx paper-note` | Read, write, or delete durable paper notes                 |
 | `ppx files`      | List, read, write, upload, patch, and delete project files |
 | `ppx skills`     | Install or remove bundled Agent Skills                     |
+| `ppx task`       | Inspect or wait for data-process tasks                     |
 
 Run `ppx <group> --help` for authoritative options.
 
@@ -164,6 +165,13 @@ ppx paper upload --source ./paper.pdf
 ```
 
 Verified metadata can be supplied with `--title`, repeated `--author`, `--year`, `--publication`, and `--doi`. Agents should omit these options unless the values come from an explicit trusted source. See [README.zh.md](README.zh.md) for the full Chinese workflow.
+
+Inspect or wait for the returned task. `wait` exits with code 3 on timeout and code 4 when the task finishes as failed or canceled:
+
+```bash
+ppx task get --task-id tsk_x
+ppx task wait --task-id tsk_x --timeout 1800 --interval 5
+```
 
 Download the parsed Markdown stored for a paper:
 

@@ -131,6 +131,7 @@ ppx project global-finder
 | `ppx paper-note` | 读取、写入或删除持久化论文备注                 |
 | `ppx files`      | 列出、读取、写入、上传、局部修改和删除项目文件 |
 | `ppx skills`     | 安装或移除随包提供的 Agent Skills              |
+| `ppx task`       | 查询或等待 data-process 后台任务               |
 
 使用 `ppx <分组> --help` 查看当前版本的完整参数。
 
@@ -177,6 +178,13 @@ ppx --project-id prj_x paper upload \
 ```
 
 Agent 默认只传 `--source`，不从文件名、搜索摘要或网页片段猜测元数据。成功结果包含 `paper_id`、`task_id`、`project_id`、处理状态与 `next_action`。上传和项目关联是两个明确的操作；若第二步失败，Paper 可能已经成功进入全局文献库，CLI 会以非零退出码报告关联错误，不会删除已上传论文。
+
+查询或等待返回的后台任务。`wait` 超时返回退出码 3，任务以失败或取消终止时返回退出码 4：
+
+```bash
+ppx task get --task-id tsk_x
+ppx task wait --task-id tsk_x --timeout 1800 --interval 5
+```
 
 下载某篇论文已解析并保存的 Markdown：
 

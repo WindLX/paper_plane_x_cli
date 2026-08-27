@@ -17,6 +17,7 @@ from paper_plane_x_cli.cli.paper_note import paper_note_app
 from paper_plane_x_cli.cli.pdf import pdf_app
 from paper_plane_x_cli.cli.project import project_app
 from paper_plane_x_cli.cli.skills import skills_app
+from paper_plane_x_cli.cli.task import task_app
 from paper_plane_x_cli.cli.utils import resolve_context as _resolve_context
 
 GLOBAL_CONTEXT_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
@@ -76,6 +77,7 @@ app.add_typer(files_app, name="files")
 app.add_typer(paper_app, name="paper")
 app.add_typer(paper_note_app, name="paper-note")
 app.add_typer(skills_app, name="skills")
+app.add_typer(task_app, name="task")
 
 
 if __name__ == "__main__":
