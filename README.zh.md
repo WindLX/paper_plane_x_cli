@@ -127,7 +127,7 @@ ppx project global-finder
 | `ppx project`    | 项目级发现                                     |
 | `ppx librarian`  | 检索、矩阵对比和单篇深度分析                   |
 | `ppx pdf`        | 将本地 PDF 转换为 Markdown 和图片              |
-| `ppx paper`      | 下载已保存的论文 Markdown 或原始 PDF           |
+| `ppx paper`      | 上传本地 PDF，或下载已保存的 Markdown / PDF     |
 | `ppx paper-note` | 读取、写入或删除持久化论文备注                 |
 | `ppx files`      | 列出、读取、写入、上传、局部修改和删除项目文件 |
 | `ppx skills`     | 安装或移除随包提供的 Agent Skills              |
@@ -156,6 +156,27 @@ ppx files delete --path /notes/obsolete.md
 Agent 修改已有文档时，优先使用 `find`、`lines`、`replace-*` 或 `patch` 进行局部变更，以减少意外覆盖并获得明确的失败结果。
 
 ## 论文资源与备注
+
+把本地单篇 PDF 上传到 Paper Plane X：
+
+```bash
+ppx paper upload --source ./paper.pdf
+```
+
+当前上下文存在 `project_id` 时，CLI 会先调用通用论文上传接口，再调用现有项目关联接口；Backend 的上传契约保持不变。使用顶层 `--project-id none` 可以显式只上传到全局文献库。标题、作者、年份、刊物和 DOI 都是可选信息，只应在来源已经确认时传入：
+
+```bash
+ppx --project-id prj_x paper upload \
+  --source ./paper.pdf \
+  --title "Verified title" \
+  --author "Alice" \
+  --author "Bob" \
+  --year 2025 \
+  --publication "Verified venue" \
+  --doi "10.1000/example"
+```
+
+Agent 默认只传 `--source`，不从文件名、搜索摘要或网页片段猜测元数据。成功结果包含 `paper_id`、`task_id`、`project_id`、处理状态与 `next_action`。上传和项目关联是两个明确的操作；若第二步失败，Paper 可能已经成功进入全局文献库，CLI 会以非零退出码报告关联错误，不会删除已上传论文。
 
 下载某篇论文已解析并保存的 Markdown：
 
@@ -209,6 +230,7 @@ ppx pdf parse --source ./paper.pdf --save-dir ./paper-pdf
 ```text
 skills/ppx-researcher/SKILL.md
 skills/ppx-pdf-to-markdown/SKILL.md
+skills/ppx-paper-acquisition/SKILL.md
 ```
 
 列出并安装技能：

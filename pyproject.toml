@@ -1,6 +1,6 @@
 [project]
 name = "paper-plane-x-cli"
-version = "0.1.8"
+version = "0.1.9"
 description = "HTTP CLI and external-agent skills for Paper Plane X"
 readme = "README.md"
 license = "AGPL-3.0-or-later"

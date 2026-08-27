@@ -208,6 +208,11 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     assert "ppx-researcher" in install_payload["installed"]
     assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
     assert (target_dir / "ppx-pdf-to-markdown" / "SKILL.md").exists()
+    acquisition_skill = target_dir / "ppx-paper-acquisition" / "SKILL.md"
+    assert acquisition_skill.exists()
+    acquisition_content = acquisition_skill.read_text(encoding="utf-8")
+    assert "ppx paper upload" in acquisition_content
+    assert "InstSci" in acquisition_content
     assert "ppx paper markdown" in (
         target_dir / "ppx-researcher" / "SKILL.md"
     ).read_text(encoding="utf-8")
@@ -233,6 +238,7 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     uninstall_payload = json.loads(uninstall_result.output)
     assert "ppx-researcher" in uninstall_payload["removed"]
     assert not (target_dir / "ppx-researcher").exists()
+    assert not (target_dir / "ppx-paper-acquisition").exists()
 
 
 def test_skills_install_defaults_to_codex_skills_dir(
