@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 from typer.testing import CliRunner
 
 from paper_plane_x_cli import cli
@@ -11,9 +12,11 @@ from paper_plane_x_cli import cli
 runner = CliRunner()
 
 
+@pytest.mark.parametrize("timeout", [None, "2400"])
 def test_pdf_parse_builds_multipart_request_and_writes_artifacts(
     tmp_path: Path,
     monkeypatch,
+    timeout,
 ) -> None:
     pdf_path = tmp_path / "paper.pdf"
     pdf_path.write_bytes(b"%PDF-1.4")
@@ -62,10 +65,12 @@ def test_pdf_parse_builds_multipart_request_and_writes_artifacts(
             str(pdf_path),
             "--save-dir",
             str(save_dir),
+            *(["--timeout", timeout] if timeout else []),
         ],
     )
 
     assert result.exit_code == 0
+    assert captured["timeout"] == (float(timeout) if timeout else 1800.0)
     assert captured["method"] == "POST"
     assert captured["url"].endswith("/api/v1/parse/pdf")
     assert captured["data"]["output_md_name"] == "paper.md"

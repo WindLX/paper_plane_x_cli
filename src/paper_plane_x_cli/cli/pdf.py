@@ -49,6 +49,14 @@ def pdf_parse(
             help="Markdown filename. Defaults to the PDF stem plus .md.",
         ),
     ] = None,
+    timeout: Annotated[
+        float,
+        typer.Option(
+            "--timeout",
+            min=1,
+            help="HTTP timeout in seconds, including MinerU cold startup and parsing.",
+        ),
+    ] = 1800.0,
 ) -> None:
     if source.suffix.lower() != ".pdf":
         fail(f"pdf parse expects a PDF file: {source}")
@@ -58,7 +66,14 @@ def pdf_parse(
     with source.open("rb") as file_obj:
         data = {"output_md_name": md_name}
         files = {"pdf_file": (source.name, file_obj, "application/pdf")}
-        response = request("POST", "/parse/pdf", ctx.obj["ctx"], data=data, files=files)
+        response = request(
+            "POST",
+            "/parse/pdf",
+            ctx.obj["ctx"],
+            data=data,
+            files=files,
+            timeout=timeout,
+        )
 
     response_data = cast(dict[str, Any], response)
     md_content = response_data.get("md_content")

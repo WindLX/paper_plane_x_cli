@@ -203,7 +203,7 @@ Use paper notes for stable conclusions about one paper. Use project files for cr
 ## PDF to Markdown
 
 ```bash
-ppx pdf parse --source ./paper.pdf --save-dir ./paper-pdf
+ppx pdf parse --source ./paper.pdf --save-dir ./paper-pdf --timeout 1800
 ```
 
 The command uploads the PDF to the configured backend parser, writes Markdown and referenced images, prunes unreferenced images, and prints a JSON summary:

@@ -46,6 +46,9 @@ Important options:
 - `--source`: local PDF file path.
 - `--save-dir`: local directory where Markdown and `images/` are written.
 - `--output-md-name`: Markdown filename. Defaults to the PDF stem plus `.md`.
+- `--timeout`: HTTP timeout in seconds, default `1800`. Allow this time for cold startup and parsing; a timeout does not cancel remote work.
+
+Local deployments require MinerU 4.x V1. PPX handles upload, job polling, and artifact download using the `standard` quality tier and all PDF pages. Point the CLI at the PPX backend, using the configured CLI base URL; configure the MinerU address in the backend settings. An on-demand deployment may take several minutes on first use.
 
 The command prints JSON:
 
