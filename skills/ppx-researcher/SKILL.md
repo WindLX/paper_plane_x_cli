@@ -31,7 +31,7 @@ Else if the user **just wants to work with a single paper**, `project_id` is not
 
 `project-id` is needed in `project` and `files` commands, and in `librarian search` commands it is optional but recommended for project-scoped searches. It is not needed in other commands.
 
-Read `references/tool-guide.md` when you need exact CLI syntax, query rules, file editing commands, matrix field paths, or examples.
+Read [references/tool-guide.md](references/tool-guide.md) when you need exact CLI syntax, query rules, matrix field paths, or paper-resource and note commands.
 
 ## Operating Principles
 
@@ -77,7 +77,7 @@ Use `ppx paper pdf --paper-id <paper_id> --save-dir <directory>` when the task d
 
 ### Project Files and Drafts
 
-Before writing or continuing drafts, inspect existing files with `ppx files list`, `read`, `lines`, or `find`. Use line, anchor, or exact-text edits when possible. Use `write` only for new files or intentional full regeneration.
+When the task must read, save, upload, or modify project files, read [references/advanced-topics.md](references/advanced-topics.md) for the file commands and editing rules before acting. Literature search, comparison, and deep-dive work does not need it. Inspect existing files before writing or continuing a draft, and prefer the smallest reliable edit over whole-file overwrite.
 
 ## Common Workflows
 

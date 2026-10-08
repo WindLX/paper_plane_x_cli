@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
 from typing import Annotated
@@ -17,12 +16,8 @@ skills_app = typer.Typer(
 )
 
 
-def _default_codex_skills_dir() -> Path:
-    return Path(os.environ.get("CODEX_HOME", "~/.codex")) / "skills"
-
-
 def _resolve_target_dir(target_dir: Path | None) -> Path:
-    return (target_dir or _default_codex_skills_dir()).expanduser()
+    return (target_dir or Path.home() / ".agents" / "skills").expanduser()
 
 
 def _bundled_skills_dir() -> Path:
@@ -61,7 +56,7 @@ def skills_install(
         Path | None,
         typer.Option(
             "--target-dir",
-            help="Directory that should contain skill folders. Defaults to ${CODEX_HOME:-~/.codex}/skills.",
+            help="Directory that should contain skill folders. Defaults to ~/.agents/skills (the generic Agent Skills directory).",
         ),
     ] = None,
     force: Annotated[
@@ -101,7 +96,7 @@ def skills_uninstall(
         Path | None,
         typer.Option(
             "--target-dir",
-            help="Directory that contains installed skill folders. Defaults to ${CODEX_HOME:-~/.codex}/skills.",
+            help="Directory that contains installed skill folders. Defaults to ~/.agents/skills (the generic Agent Skills directory).",
         ),
     ] = None,
 ) -> None:

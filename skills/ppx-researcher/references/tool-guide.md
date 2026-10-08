@@ -2,97 +2,17 @@
 
 `ppx` is the HTTP bridge from external agents to Paper Plane X. It calls FastAPI endpoints and prints JSON.
 
+Read [advanced-topics.md](advanced-topics.md) only when the task must read, save, upload, or modify project files.
+
 ## Contents
 
-- Context
-- Project files
-- Paper resources
-- Paper notes
 - Librarian commands
 - Query rules
 - Matrix field paths
-- File editing examples
+- Paper notes
+- Paper resources
+- Context
 - Output handling
-
-## Context
-
-```bash
-ppx context set --base-url http://127.0.0.1:8000/api/v1 --project-id prj_x
-ppx context set --global --project-id prj_shared
-ppx context set --project-id null
-ppx context show
-```
-
-Context precedence:
-
-1. Command flags: `--base-url`, `--project-id`
-2. Environment variables: `PPX_<CONFIG_KEY>`, such as `PPX_BASE_URL` and `PPX_PROJECT_ID`
-3. Local context: `./.paper-plane-x/context.json`
-4. Global context: `~/.config/paper-plane-x/context.json`
-5. Default base URL: `http://127.0.0.1:8000/api/v1`
-
-Context writes are local by default; use `--global` for shared defaults. For context sources, precedence is `ENV > local JSON > global JSON`. The `project_id` values `none`, `null`, `None`, and `NULL` clear the target key with `context set`; as a command option or environment value, they explicitly disable the resolved project.
-
-Run `ppx context show` before project-scoped work. Most project file and librarian commands require `project_id`.
-
-## Project Files
-
-| Researcher action     | CLI command                                                                                           |
-| --------------------- | ----------------------------------------------------------------------------------------------------- |
-| List files            | `ppx files list --dir /`                                                                              |
-| Read whole file       | `ppx files read --path /notes/idea.md`                                                                |
-| Read line range       | `ppx files lines --path /draft.md --start-line 10 --end-line 20`                                      |
-| Find text             | `ppx files find --path /draft.md --query "Related Work"`                                              |
-| Write/overwrite file  | `ppx files write --path /notes/summary.md --content "..."`                                            |
-| Upload local file     | `ppx files upload --source ./summary.md --path /notes/summary.md`                                     |
-| Replace line range    | `ppx files replace-lines --path /draft.md --start-line 4 --end-line 6 --new-text "..."`               |
-| Replace exact text    | `ppx files replace-text --path /draft.md --old-text "..." --new-text "..."`                           |
-| Anchor patch          | `ppx files patch --path /draft.md --action insert_after --anchor-text "## Methods\n" --content "..."` |
-| Delete file/empty dir | `ppx files delete --path /tmp/old.md`                                                                 |
-
-File editing rules:
-
-- Inspect before editing: use `list`, `read`, `lines`, or `find`.
-- Prefer the smallest reliable edit: `replace-lines` for known line ranges, `replace-text` for unique fixed text, `patch` for anchor-based edits.
-- Use `write` only for new files or intentional full-file regeneration.
-- Use `upload` when a local file already exists; do not paste large local files into `write`.
-- `replace-text` and `patch` support `--expected-occurrences`; use it for safety. `replace-text` also supports `--replace-all`.
-- If an edit command fails because line numbers, matches, or paths changed, re-read or re-find before retrying.
-- Line numbers are 1-based, and `end_line` is inclusive.
-- Project files must stay inside the sandbox and use one of: `.csv`, `.json`, `.md`, `.txt`, `.yaml`, `.yml`, `.toml`.
-- Single-file size limit is 10485760 bytes.
-
-## Paper Notes
-
-| Researcher action | CLI command                                          |
-| ----------------- | ---------------------------------------------------- |
-| Read note         | `ppx paper-note get --paper-id p1`                   |
-| Write/update note | `ppx paper-note write --paper-id p1 --content "..."` |
-| Delete note       | `ppx paper-note delete --paper-id p1`                |
-
-Paper notes are for stable, reusable conclusions about one paper. Read existing notes before overwriting.
-
-## Paper Resources
-
-Download a paper's complete stored parsed Markdown:
-
-```bash
-ppx paper markdown --paper-id p1 --save-dir ./paper-markdown
-```
-
-The default output path is `./paper-markdown/p1.md`. Use `--output-md-name full-paper.md` to choose another `.md` filename. The command prints `paper_id`, `md_path`, and `bytes_written`.
-
-Download the preserved original PDF when layout or visual evidence matters:
-
-```bash
-ppx paper pdf --paper-id p1 --save-dir ./paper-pdf
-```
-
-The default output path is `./paper-pdf/p1.pdf`. Use `--output-pdf-name source.pdf` for another `.pdf` filename. The command prints `paper_id`, `pdf_path`, and `bytes_written`.
-
-Use Markdown for full-text reading and local text processing. Use the original PDF for page layout, figures, tables, formulas, or source-file verification.
-
-Because full paper files are usually long, prefer delegating focused sections or questions to sub-agents when that capability is available. Otherwise, read the Markdown in targeted chunks rather than loading the entire file at once.
 
 ## Librarian Commands
 
@@ -229,41 +149,58 @@ Useful paths:
 - `analysis_report.core_formulation.objective_function.text`
 - `analysis_report.derivation_steps[0].detail_explanation.text`
 
-## File Editing Examples
+## Paper Notes
 
-Inspect before editing:
+| Researcher action | CLI command                                          |
+| ----------------- | ---------------------------------------------------- |
+| Read note         | `ppx paper-note get --paper-id p1`                   |
+| Write/update note | `ppx paper-note write --paper-id p1 --content "..."` |
+| Delete note       | `ppx paper-note delete --paper-id p1`                |
 
-```bash
-ppx files list --dir /
-ppx files find --path /draft.md --query "Related Work"
-ppx files lines --path /draft.md --start-line 20 --end-line 40
-```
+Paper notes are for stable, reusable conclusions about one paper. Read existing notes before overwriting.
 
-Small line edit:
+## Paper Resources
 
-```bash
-ppx files replace-lines --path /draft.md --start-line 24 --end-line 29 --new-text "new paragraph"
-```
-
-Anchor edit:
+Download a paper's complete stored parsed Markdown:
 
 ```bash
-ppx files patch --path /draft.md --action insert_after --anchor-text "## Related Work\n" --content "new content\n"
+ppx paper markdown --paper-id p1 --save-dir ./paper-markdown
 ```
 
-Whole-file write, only when intended:
+The default output path is `./paper-markdown/p1.md`. Use `--output-md-name full-paper.md` to choose another `.md` filename. The command prints `paper_id`, `md_path`, and `bytes_written`.
+
+Download the preserved original PDF when layout or visual evidence matters:
 
 ```bash
-ppx files write --path /notes/lit-review.md --content "# Literature Review\n..."
+ppx paper pdf --paper-id p1 --save-dir ./paper-pdf
 ```
 
-Upload a local file into the project sandbox:
+The default output path is `./paper-pdf/p1.pdf`. Use `--output-pdf-name source.pdf` for another `.pdf` filename. The command prints `paper_id`, `pdf_path`, and `bytes_written`.
+
+Use Markdown for full-text reading and local text processing. Use the original PDF for page layout, figures, tables, formulas, or source-file verification.
+
+Because full paper files are usually long, prefer delegating focused sections or questions to sub-agents when that capability is available. Otherwise, read the Markdown in targeted chunks rather than loading the entire file at once.
+
+## Context
 
 ```bash
-ppx files upload --source ./lit-review.md --path /notes/lit-review.md
+ppx context set --base-url http://127.0.0.1:8000/api/v1 --project-id prj_x
+ppx context set --global --project-id prj_shared
+ppx context set --project-id null
+ppx context show
 ```
 
-If `--path` is omitted, upload targets `/<source filename>`.
+Context precedence:
+
+1. Command flags: `--base-url`, `--project-id`
+2. Environment variables: `PPX_<CONFIG_KEY>`, such as `PPX_BASE_URL` and `PPX_PROJECT_ID`
+3. Local context: `./.paper-plane-x/context.json`
+4. Global context: `~/.config/paper-plane-x/context.json`
+5. Default base URL: `http://127.0.0.1:8000/api/v1`
+
+Context writes are local by default; use `--global` for shared defaults. For context sources, precedence is `ENV > local JSON > global JSON`. The `project_id` values `none`, `null`, `None`, and `NULL` clear the target key with `context set`; as a command option or environment value, they explicitly disable the resolved project.
+
+Run `ppx context show` before project-scoped work. Most project file and librarian commands require `project_id`.
 
 ## Output Handling
 

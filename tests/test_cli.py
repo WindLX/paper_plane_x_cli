@@ -219,6 +219,11 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     assert "ppx paper markdown" in (
         target_dir / "ppx-pdf-to-markdown" / "SKILL.md"
     ).read_text(encoding="utf-8")
+    researcher_refs = target_dir / "ppx-researcher" / "references"
+    assert (researcher_refs / "tool-guide.md").is_file()
+    advanced = researcher_refs / "advanced-topics.md"
+    assert advanced.is_file()
+    assert "ppx files replace-text" in advanced.read_text(encoding="utf-8")
 
     second_install = runner.invoke(
         cli.app,
@@ -241,7 +246,7 @@ def test_skills_install_and_uninstall(tmp_path: Path) -> None:
     assert not (target_dir / "ppx-paper-acquisition").exists()
 
 
-def test_skills_install_defaults_to_codex_skills_dir(
+def test_skills_install_and_uninstall_default_to_agent_skills_dir(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -253,26 +258,88 @@ def test_skills_install_defaults_to_codex_skills_dir(
 
     assert install_result.exit_code == 0
     payload = json.loads(install_result.output)
-    target_dir = home_dir / ".codex" / "skills"
+    target_dir = home_dir / ".agents" / "skills"
     assert payload["target_dir"] == str(target_dir)
     assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
     assert (target_dir / "ppx-pdf-to-markdown" / "SKILL.md").exists()
+    assert (target_dir / "ppx-paper-acquisition" / "SKILL.md").exists()
+    assert not (home_dir / ".codex").exists()
+
+    uninstall_result = runner.invoke(cli.app, ["skills", "uninstall"])
+
+    assert uninstall_result.exit_code == 0
+    uninstall_payload = json.loads(uninstall_result.output)
+    assert uninstall_payload["target_dir"] == str(target_dir)
+    assert set(uninstall_payload["removed"]) == {
+        "ppx-researcher",
+        "ppx-pdf-to-markdown",
+        "ppx-paper-acquisition",
+    }
+    assert not (target_dir / "ppx-researcher").exists()
 
 
-def test_skills_install_respects_codex_home(
+def test_skills_default_ignores_codex_home_and_preserves_existing_installations(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
     codex_home = tmp_path / "codex-home"
+    home_dir = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home_dir))
     monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    previous_skill = codex_home / "skills" / "ppx-researcher"
+    previous_skill.mkdir(parents=True)
+    (previous_skill / "SKILL.md").write_text("Existing installation", encoding="utf-8")
 
     install_result = runner.invoke(cli.app, ["skills", "install"])
 
     assert install_result.exit_code == 0
     payload = json.loads(install_result.output)
-    target_dir = codex_home / "skills"
+    target_dir = home_dir / ".agents" / "skills"
     assert payload["target_dir"] == str(target_dir)
     assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
+
+    uninstall_result = runner.invoke(cli.app, ["skills", "uninstall"])
+
+    assert uninstall_result.exit_code == 0
+    assert json.loads(uninstall_result.output)["target_dir"] == str(target_dir)
+    assert (previous_skill / "SKILL.md").read_text(
+        encoding="utf-8"
+    ) == "Existing installation"
+
+
+def test_skills_explicit_target_overrides_default_and_codex_home(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    home_dir = tmp_path / "home"
+    monkeypatch.setenv("HOME", str(home_dir))
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
+    target_dir = home_dir / "custom-skills"
+
+    install_result = runner.invoke(
+        cli.app, ["skills", "install", "--target-dir", "~/custom-skills"]
+    )
+
+    assert install_result.exit_code == 0
+    assert json.loads(install_result.output)["target_dir"] == str(target_dir)
+    assert (target_dir / "ppx-researcher" / "SKILL.md").exists()
+    assert not (home_dir / ".agents").exists()
+
+    uninstall_result = runner.invoke(
+        cli.app, ["skills", "uninstall", "--target-dir", "~/custom-skills"]
+    )
+
+    assert uninstall_result.exit_code == 0
+    assert json.loads(uninstall_result.output)["target_dir"] == str(target_dir)
+    assert not (target_dir / "ppx-researcher").exists()
+
+
+def test_skills_help_documents_generic_agent_directory() -> None:
+    for command in ("install", "uninstall"):
+        result = runner.invoke(cli.app, ["skills", command, "--help"])
+        assert result.exit_code == 0
+        assert "~/.agents/skills" in result.output
+        assert "CODEX_HOME" not in result.output
 
 
 def test_command_group_without_subcommand_shows_help() -> None:

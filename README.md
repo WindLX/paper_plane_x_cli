@@ -8,10 +8,11 @@ English | [中文](README.zh.md)
 
 `ppx` is the JSON-first command-line client and external-agent integration package for [Paper Plane X](https://github.com/WindLX/paper_plane_x). It provides stable HTTP commands for project discovery, literature search, paper comparison, PDF parsing, project-file editing, and durable paper notes.
 
-The package also ships two Agent Skills:
+The package also ships three Agent Skills:
 
 - `ppx-researcher`: evidence-driven literature research through a Paper Plane X project.
 - `ppx-pdf-to-markdown`: local PDF conversion through the configured Paper Plane X parser.
+- `ppx-paper-acquisition`: acquire original paper PDFs and upload them into a Paper Plane X project.
 
 Every remote command calls a running Paper Plane X Backend under `/api/v1`; the CLI never reads the backend database directly.
 
@@ -235,12 +236,12 @@ ppx skills list
 ppx skills install
 ```
 
-The default target is `${CODEX_HOME:-~/.codex}/skills`. Use an explicit target for other tools:
+Both installation and uninstallation default to the generic Agent Skills directory `~/.agents/skills`, independently of `CODEX_HOME`. Use `--target-dir` to choose another directory:
 
 | Tool or scope                  | Command                                              |
 | ------------------------------ | ---------------------------------------------------- |
-| Codex default                  | `ppx skills install`                                 |
-| Generic Agent Skills directory | `ppx skills install --target-dir ~/.agents/skills`   |
+| Generic Agent Skills directory | `ppx skills install`                                 |
+| Explicit Codex directory       | `ppx skills install --target-dir ~/.codex/skills`    |
 | Pi agent                       | `ppx skills install --target-dir ~/.pi/agent/skills` |
 | Claude Code user scope         | `ppx skills install --target-dir ~/.claude/skills`   |
 | Claude Code project scope      | `ppx skills install --target-dir ./.claude/skills`   |
@@ -249,8 +250,10 @@ Existing bundled skill directories are skipped unless `--force` is provided. `un
 
 ```bash
 ppx skills uninstall
-ppx skills uninstall --target-dir ~/.agents/skills
+ppx skills uninstall --target-dir ~/.codex/skills
 ```
+
+Changing the default does not move existing installations. Specify their directory with `--target-dir` to update or remove them.
 
 Restart the Agent application or open a new session after installation.
 

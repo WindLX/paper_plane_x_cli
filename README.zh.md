@@ -8,10 +8,11 @@
 
 `ppx` 是 [Paper Plane X](https://github.com/WindLX/paper_plane_x) 的 JSON 优先命令行客户端与外部 Agent 集成包。它通过稳定的 HTTP 命令提供项目发现、文献检索、论文对比、PDF 解析、项目文件编辑和论文备注管理能力。
 
-本包还提供两个 Agent Skills：
+本包还提供三个 Agent Skills：
 
 - `ppx-researcher`：在 Paper Plane X 项目中执行基于证据的文献研究。
 - `ppx-pdf-to-markdown`：使用 Paper Plane X 中配置的解析器将本地 PDF 转换为 Markdown。
+- `ppx-paper-acquisition`：获取原始论文 PDF 并上传到 Paper Plane X 项目。
 
 所有远程命令都调用运行中 Paper Plane X Backend 的 `/api/v1` 接口；CLI 不会直接读取后端数据库。
 
@@ -248,12 +249,12 @@ ppx skills list
 ppx skills install
 ```
 
-默认安装目录为 `${CODEX_HOME:-~/.codex}/skills`。其他工具可显式指定目录：
+安装和卸载都默认使用通用 Agent Skills 目录 `~/.agents/skills`，不受 `CODEX_HOME` 影响。需要其他目录时，通过 `--target-dir` 显式指定：
 
 | 工具或作用域           | 命令                                                 |
 | ---------------------- | ---------------------------------------------------- |
-| Codex 默认目录         | `ppx skills install`                                 |
-| 通用 Agent Skills 目录 | `ppx skills install --target-dir ~/.agents/skills`   |
+| 通用 Agent Skills 目录 | `ppx skills install`                                 |
+| 显式指定 Codex 目录    | `ppx skills install --target-dir ~/.codex/skills`    |
 | Pi agent               | `ppx skills install --target-dir ~/.pi/agent/skills` |
 | Claude Code 用户级     | `ppx skills install --target-dir ~/.claude/skills`   |
 | Claude Code 项目级     | `ppx skills install --target-dir ./.claude/skills`   |
@@ -262,8 +263,10 @@ ppx skills install
 
 ```bash
 ppx skills uninstall
-ppx skills uninstall --target-dir ~/.agents/skills
+ppx skills uninstall --target-dir ~/.codex/skills
 ```
+
+默认目录变化不会迁移已有安装。更新或卸载这些技能时，请通过 `--target-dir` 指定其原目录。
 
 安装完成后，请重启 Agent 应用或开启新会话。
 
