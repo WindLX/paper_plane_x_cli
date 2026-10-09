@@ -28,8 +28,9 @@ If `--path` is omitted on `upload`, the file targets `/<source filename>`.
 - `replace-text` and `patch` support `--expected-occurrences`; use it for safety. `replace-text` also supports `--replace-all`.
 - If an edit command fails because line numbers, matches, or paths changed, re-read or re-find before retrying.
 - Line numbers are 1-based, and `end_line` is inclusive.
-- Project files must stay inside the sandbox and use one of: `.csv`, `.json`, `.md`, `.txt`, `.yaml`, `.yml`, `.toml`.
+- Project files must stay inside the sandbox and use one of: `.csv`, `.json`, `.md`, `.txt`, `.yaml`, `.yml`, `.toml`, or an image extension `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`.
 - Single-file size limit is 10485760 bytes.
+- Images support upload, listing, preview, original download, deletion, and Markdown references in the Web console. The CLI supports image upload and deletion; `read`, `write`, and the edit commands accept text files, while `upload` also accepts images and sends the file's raw bytes. The backend validates image content against the extension, so upload the original file rather than a re-encoded copy.
 
 ## Examples
 
@@ -63,6 +64,12 @@ Upload a local file into the project sandbox:
 
 ```bash
 ppx files upload --source ./lit-review.md --path /notes/lit-review.md
+```
+
+Upload a local PNG figure the same way; the bytes are sent unchanged:
+
+```bash
+ppx files upload --source ./figure.png --path /images/figure.png
 ```
 
 Delete a file or empty directory:

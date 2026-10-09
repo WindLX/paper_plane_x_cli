@@ -153,7 +153,7 @@ ppx files patch \
 ppx files delete --path /notes/obsolete.md
 ```
 
-Project files are sandboxed by the backend: path traversal is rejected, only approved text/data extensions are accepted, and uploads are limited to 10 MB per file.
+Project files are sandboxed by the backend: path traversal is rejected, only approved text/data extensions (`.md`, `.txt`, `.json`, `.csv`, `.yaml`, `.yml`, `.toml`) and image extensions (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`) are accepted, and uploads are limited to 10 MB per file. `upload` streams the local file as raw bytes; the backend validates images by real content, so a mismatched extension or a corrupt file fails with a locatable error instead of being stored.
 
 Prefer targeted `find`, `lines`, `replace-*`, or `patch` operations when an Agent modifies an existing document. This reduces accidental overwrites and makes failures explicit.
 

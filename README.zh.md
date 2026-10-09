@@ -153,7 +153,7 @@ ppx files patch \
 ppx files delete --path /notes/obsolete.md
 ```
 
-项目文件受后端沙箱保护：禁止路径穿越，仅接受允许的文本或数据扩展名，单个上传文件最大为 10 MB。
+项目文件受后端沙箱保护：禁止路径穿越，仅接受允许的文本/数据扩展名（`.md`、`.txt`、`.json`、`.csv`、`.yaml`、`.yml`、`.toml`）和图片扩展名（`.png`、`.jpg`、`.jpeg`、`.webp`、`.gif`、`.svg`），单个上传文件最大为 10 MB。`upload` 以原始字节流式上传本地文件；后端按真实内容校验图片，扩展名不符或文件损坏会以可定位的错误失败，而不是照常入库。
 
 Agent 修改已有文档时，优先使用 `find`、`lines`、`replace-*` 或 `patch` 进行局部变更，以减少意外覆盖并获得明确的失败结果。
 
